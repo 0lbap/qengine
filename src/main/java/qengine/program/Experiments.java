@@ -1,5 +1,6 @@
 package qengine.program;
 
+import fr.boreal.model.logicalElements.api.Atom;
 import org.eclipse.rdf4j.rio.RDFFormat;
 import qengine.model.RDFAtom;
 import qengine.parser.RDFAtomParser;
@@ -17,25 +18,22 @@ public class Experiments {
     private static final String SAMPLE_QUERY_FILE = WORKING_DIR + "sample_query.queryset";
 
     public static void main(String[] args) throws IOException {
-        System.out.println("Beginning experiments");
-
-        System.out.println("=== Parsing RDF Data ===");
+        System.out.println("Parsing RDF Data");
         List<RDFAtom> rdfAtoms = parseRDFData(SAMPLE_DATA_FILE);
 
-        // Affiche les atomes RDF parsés
-//        System.out.println("\n=== RDF Atoms ===");
-//        for (RDFAtom atom : rdfAtoms) {
-//            System.out.println("---");
-//            System.out.println(atom.getTripleSubject());
-//            System.out.println(atom.getTripleObject());
-//            System.out.println(atom.getTriplePredicate());
-//            System.out.println("---");
-//        }
-
-        System.out.println("Adding an element to the HexaStore");
+        System.out.println("Adding elements to the HexaStore");
         RDFHexaStore hs = new RDFHexaStore();
         hs.addAll(rdfAtoms);
-        System.out.println(hs.toString());
+
+        System.out.println("Current state of the HexaStore:");
+        System.out.println(hs);
+
+        System.out.println("Resolved atoms using the dictionary:");
+        for (Atom atom : hs.getAtoms()) {
+            System.out.println(atom);
+        }
+
+        System.out.println("Total RDF atoms: " + hs.size());
     }
 
     private static List<RDFAtom> parseRDFData(String rdfFilePath) throws IOException {
