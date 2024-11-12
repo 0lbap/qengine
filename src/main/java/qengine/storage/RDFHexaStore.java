@@ -7,7 +7,6 @@ import qengine.model.RDFAtom;
 import qengine.model.StarQuery;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Implémentation d'un HexaStore pour stocker des RDFAtom.
@@ -18,13 +17,12 @@ import java.util.stream.Collectors;
 public class RDFHexaStore implements RDFStorage {
 
     private HashMap<Integer, Term> dict = new HashMap<>();
-    // TODO: refactor List of Lists into Map of Map of Set
-    private List<List<Integer>> atomIndexesSPO = new ArrayList<>();
-    private List<List<Integer>> atomIndexesSOP = new ArrayList<>();
-    private List<List<Integer>> atomIndexesPSO = new ArrayList<>();
-    private List<List<Integer>> atomIndexesPOS = new ArrayList<>();
-    private List<List<Integer>> atomIndexesOSP = new ArrayList<>();
-    private List<List<Integer>> atomIndexesOPS = new ArrayList<>();
+    private Map<Integer, Map<Integer, Set<Integer>>> atomIndexesSPO = new HashMap<>();
+    private Map<Integer, Map<Integer, Set<Integer>>> atomIndexesSOP = new HashMap<>();
+    private Map<Integer, Map<Integer, Set<Integer>>> atomIndexesPSO = new HashMap<>();
+    private Map<Integer, Map<Integer, Set<Integer>>> atomIndexesPOS = new HashMap<>();
+    private Map<Integer, Map<Integer, Set<Integer>>> atomIndexesOSP = new HashMap<>();
+    private Map<Integer, Map<Integer, Set<Integer>>> atomIndexesOPS = new HashMap<>();
     private int dictIndex = 1;
     private int size = 0;
 
@@ -49,19 +47,20 @@ public class RDFHexaStore implements RDFStorage {
         }
 
         // Vérifie si l'atome est déjà enregistré
-        if (atomIndexesSPO.contains(List.of(indexes[0], indexes[1], indexes[2]))) {
+        if (atomIndexesSPO.containsKey(indexes[0]) && atomIndexesSPO.get(indexes[0]).containsKey(indexes[1]) && atomIndexesSPO.get(indexes[0]).get(indexes[1]).contains(indexes[2])) {
             return false;
         }
 
         size++;
 
         // S = 0 | P = 1 | O = 2
-        atomIndexesSPO.add(List.of(indexes[0], indexes[1], indexes[2]));
-        atomIndexesSOP.add(List.of(indexes[0], indexes[2], indexes[1]));
-        atomIndexesPSO.add(List.of(indexes[1], indexes[0], indexes[2]));
-        atomIndexesPOS.add(List.of(indexes[1], indexes[2], indexes[0]));
-        atomIndexesOSP.add(List.of(indexes[2], indexes[0], indexes[1]));
-        atomIndexesOPS.add(List.of(indexes[2], indexes[1], indexes[0]));
+        addIndex(atomIndexesSPO, indexes[0], indexes[1], indexes[2]);
+        addIndex(atomIndexesSOP, indexes[0], indexes[2], indexes[1]);
+        addIndex(atomIndexesPSO, indexes[1], indexes[0], indexes[2]);
+        addIndex(atomIndexesPOS, indexes[1], indexes[2], indexes[0]);
+        addIndex(atomIndexesOSP, indexes[2], indexes[0], indexes[1]);
+        addIndex(atomIndexesOPS, indexes[2], indexes[1], indexes[0]);
+
         return true;
     }
 
@@ -117,7 +116,27 @@ public class RDFHexaStore implements RDFStorage {
 
     @Override
     public List<Atom> getAtoms() {
-        return atomIndexesSPO.stream().map(atomIndex -> new RDFAtom(dict.get(atomIndex.get(0)), dict.get(atomIndex.get(1)), dict.get(atomIndex.get(2)))).collect(Collectors.toList());
+        List<Atom> atoms = new ArrayList<>();
+
+        for (Map.Entry<Integer, Map<Integer, Set<Integer>>> subjectEntry : atomIndexesSPO.entrySet()) {
+            int subjectIndex = subjectEntry.getKey();
+            Term subject = dict.get(subjectIndex);
+
+            for (Map.Entry<Integer, Set<Integer>> predicateEntry : subjectEntry.getValue().entrySet()) {
+                int predicateIndex = predicateEntry.getKey();
+                Term predicate = dict.get(predicateIndex);
+
+                for (Integer objectIndex : predicateEntry.getValue()) {
+                    Term object = dict.get(objectIndex);
+
+                    // Créer un nouvel atome RDF avec le sujet, prédicat et objet récupérés
+                    RDFAtom atom = new RDFAtom(subject, predicate, object);
+                    atoms.add(atom);
+                }
+            }
+        }
+
+        return atoms;
     }
 
     @Override
@@ -162,6 +181,21 @@ public class RDFHexaStore implements RDFStorage {
             return MatchAtomCase.VAR_VAR_VAR;
         }
         return null;
+    }
+
+    private void addIndex(Map<Integer, Map<Integer, Set<Integer>>> atomIndexes, int x, int y, int z) {
+        if (atomIndexes.containsKey(x)) {
+            if (atomIndexes.get(x).containsKey(y)) {
+                atomIndexes.get(x).get(y).add(z);
+            } else {
+                atomIndexes.get(x).put(y, new HashSet<>());
+                atomIndexes.get(x).get(y).add(z);
+            }
+        } else {
+            atomIndexes.put(x, new HashMap<>());
+            atomIndexes.get(x).put(y, new HashSet<>());
+            atomIndexes.get(x).get(y).add(z);
+        }
     }
 
 }
