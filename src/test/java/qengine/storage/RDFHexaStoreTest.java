@@ -115,9 +115,7 @@ public class RDFHexaStoreTest {
         assertTrue(matchedList.contains(secondResult), "Missing substitution: " + firstResult);
         assertTrue(matchedList.contains(secondResult), "Missing substitution: " + secondResult);
 
-        // CASE 2
-        // <x, ?y, z>
-
+        // CASE 2 | <x, ?y, z>
         RDFAtom matchingAtom2 = new RDFAtom(SUBJECT_1, VAR_X, OBJECT_1);
         Iterator<Substitution> matchedAtoms2 = store.match(matchingAtom2);
         List<Substitution> matchedList2 = new ArrayList<>();
@@ -149,8 +147,6 @@ public class RDFHexaStoreTest {
         assertTrue(matchedList3.contains(firstResult3), "Missing substitution: " + firstResult3);
         assertFalse(matchedList3.contains(secondResult3), "The atom doesn't exist: " + secondResult3);
 
-        // TODO Améliorer les tests unitaires suivants
-
         // CASE 4 | <x, ?y, ?z>
         RDFAtom matchingAtom4 = new RDFAtom(SUBJECT_1, VAR_Y, VAR_X);
         Iterator<Substitution> matchedAtoms4 = store.match(matchingAtom4);
@@ -161,8 +157,13 @@ public class RDFHexaStoreTest {
         firstResult4.add(VAR_Y, PREDICATE_1);
         firstResult4.add(VAR_X, OBJECT_1);
 
+        Substitution secondResult4 = new SubstitutionImpl();
+        secondResult4.add(VAR_Y, PREDICATE_2);
+        secondResult4.add(VAR_X, OBJECT_2);
+
         assertEquals(2, matchedList4.size(), "There should be two matched RDFAtom");
         assertTrue(matchedList4.contains(firstResult4), "Missing substitution: " + firstResult4);
+        assertFalse(matchedList4.contains(secondResult4), "The atom doesn't exist: " + secondResult4);
 
         // CASE 5 | <?x, ?y, z>
         RDFAtom matchingAtom5 = new RDFAtom(VAR_X, VAR_Y, OBJECT_2);
@@ -174,9 +175,13 @@ public class RDFHexaStoreTest {
         firstResult5.add(VAR_X, SUBJECT_2);
         firstResult5.add(VAR_Y, PREDICATE_1);
 
+        Substitution secondResult5 = new SubstitutionImpl();
+        secondResult5.add(VAR_X, SUBJECT_2);
+        secondResult5.add(VAR_Y, PREDICATE_2);
+
         assertEquals(1, matchedList5.size(), "There should be one matched RDFAtom");
         assertTrue(matchedList5.contains(firstResult5), "Missing substitution: " + firstResult5);
-
+        assertFalse(matchedList5.contains(secondResult5), "The atom doesn't exist: " + secondResult5);
 
         // CASE 6 | <?x, y, ?z>
         RDFAtom matchingAtom6 = new RDFAtom(VAR_X, PREDICATE_1, VAR_Y);
@@ -188,8 +193,13 @@ public class RDFHexaStoreTest {
         firstResult6.add(VAR_X, SUBJECT_1);
         firstResult6.add(VAR_Y, OBJECT_1);
 
+        Substitution secondResult6 = new SubstitutionImpl();
+        secondResult6.add(VAR_X, SUBJECT_2);
+        secondResult6.add(VAR_Y, OBJECT_3);
+
         assertEquals(3, matchedList6.size(), "There should be three matched RDFAtom");
         assertTrue(matchedList6.contains(firstResult6), "Missing substitution: " + firstResult6);
+        assertTrue(matchedList6.contains(secondResult6), "Missing substitution: " + secondResult6);
 
         // CASE 7 | <?x, ?y, ?z>
         RDFAtom matchingAtom7 = new RDFAtom(VAR_X, VAR_Y, VAR_Z); // Toutes les composantes sont des variables
@@ -213,15 +223,22 @@ public class RDFHexaStoreTest {
         result7_3.add(VAR_Y, PREDICATE_1);
         result7_3.add(VAR_Z, OBJECT_3);
 
+        // Substitution non attendue
+        Substitution result7_4 = new SubstitutionImpl();
+        result7_4.add(VAR_X, SUBJECT_2);
+        result7_4.add(VAR_Y, PREDICATE_2);
+        result7_4.add(VAR_Z, OBJECT_2);
+
         // Vérification des résultats pour le cas 7
         assertEquals(3, matchedList7.size(), "There should be three matched RDFAtoms");
         assertTrue(matchedList7.contains(result7_1), "Missing substitution: " + result7_1);
         assertTrue(matchedList7.contains(result7_2), "Missing substitution: " + result7_2);
         assertTrue(matchedList7.contains(result7_3), "Missing substitution: " + result7_3);
-
+        assertFalse(matchedList7.contains(result7_4), "The atom doesn't exist: " + result7_4);
 
         // Other cases
-        throw new NotImplementedException("This test must be completed");
+//        throw new NotImplementedException("This test must be completed");
+
     }
 
     @Test
