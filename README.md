@@ -1,5 +1,8 @@
 # qengine
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=0lbap_qengine&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=0lbap_qengine)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=0lbap_qengine&metric=coverage)](https://sonarcloud.io/summary/new_code?id=0lbap_qengine)
+
 An RDF HexaStore implementation written in Java.
 
 ## Authors
