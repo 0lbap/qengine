@@ -252,42 +252,7 @@ public class RDFHexaStore implements RDFStorage {
 
     @Override
     public Iterator<Substitution> match(StarQuery q) {
-
-        List<RDFAtom> rdfAtoms = q.getRdfAtoms();
-
-        // Vérifier que les variables réponses sont présentes dans les triplets RDF
-//        for (Variable answerVariable : q.getAnswerVariables()) {
-//            if (!dict.containsValue(answerVariable)) {
-//                throw new IllegalArgumentException("La variable réponse " + answerVariable + " n'est pas présente dans les triplets RDF.");
-//            }
-//        }
-
-        // Stocker les substitutions trouvées
-        List<Substitution> substitutions = new ArrayList<>();
-
-        // Parcourir tous les triplets RDF
-        for (RDFAtom atom : rdfAtoms) {
-            Iterator<Substitution> matchIterator = match(atom);
-
-            // Parcourir toutes les substitutions trouvées pour chaque triplet RDF
-            while (matchIterator.hasNext()) {
-                Substitution substitution = matchIterator.next();
-                Substitution newSubstitution = new SubstitutionImpl();
-
-                // Ajouter les variables réponses avec leurs valeurs correspondantes
-                for (Variable answerVariable : q.getAnswerVariables()) {
-                    newSubstitution.add(answerVariable, substitution.toMap().get(answerVariable));
-                }
-
-                substitutions.add(newSubstitution);
-
-            }
-
-        }
-
-        // Retourner un itérateur sur les substitutions trouvées
-        return substitutions.iterator();
-
+        throw new NotImplementedException();
     }
 
     @Override

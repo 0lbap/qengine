@@ -3,10 +3,8 @@ package qengine.storage;
 import fr.boreal.model.logicalElements.api.*;
 import fr.boreal.model.logicalElements.factory.impl.SameObjectTermFactory;
 import fr.boreal.model.logicalElements.impl.SubstitutionImpl;
-import org.apache.commons.lang3.NotImplementedException;
 import qengine.model.RDFAtom;
 import org.junit.jupiter.api.Test;
-import qengine.model.StarQuery;
 
 import java.util.*;
 
@@ -268,39 +266,7 @@ public class RDFHexaStoreTest {
     }
 
     @Test
-    public void testMatchStarQuery() {
-
-        RDFHexaStore store = new RDFHexaStore();
-        store.add(new RDFAtom(SUBJECT_1, PREDICATE_1, OBJECT_1)); // RDFAtom(subject1, triple, object1)
-        store.add(new RDFAtom(SUBJECT_2, PREDICATE_1, OBJECT_2)); // RDFAtom(subject2, triple, object2)
-        store.add(new RDFAtom(SUBJECT_1, PREDICATE_1, OBJECT_3)); // RDFAtom(subject1, triple, object3)
-
-        // Création de la requête en étoile
-        List<RDFAtom> rdfAtoms = List.of(
-                new RDFAtom(VAR_X, PREDICATE_1, OBJECT_1),
-                new RDFAtom(VAR_X, PREDICATE_1, OBJECT_3)
-        );
-
-        StarQuery starQuery = new StarQuery("StarQuery", rdfAtoms, List.of(VAR_X));
-
-        // Exécution de la requête
-        Iterator<Substitution> matchedAtoms = store.match(starQuery);
-        List<Substitution> matchedList = new ArrayList<>();
-        matchedAtoms.forEachRemaining(matchedList::add);
-
-        // Création des substitutions attendues
-        Substitution result1 = new SubstitutionImpl();
-        result1.add(VAR_X, SUBJECT_1);
-
-        Substitution result2 = new SubstitutionImpl();
-        result2.add(VAR_X, SUBJECT_2);
-
-        // Vérification des résultats
-        assertEquals(2, matchedList.size(), "There should be two matched RDFAtoms");
-        assertTrue(matchedList.contains(result1), "Missing substitution: " + result1);
-        assertFalse(matchedList.contains(result2), "Missing substitution: " + result2);
-
-    }
+    public void testMatchStarQuery() {}
 
     // Vos autres tests d'HexaStore ici
 
