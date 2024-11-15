@@ -95,7 +95,6 @@ public class RDFHexaStoreTest {
 
     @Test
     public void testMatchAtom() {
-
         RDFHexaStore store = new RDFHexaStore();
         store.add(new RDFAtom(SUBJECT_1, PREDICATE_1, OBJECT_1)); // RDFAtom(subject1, triple, object1)
         store.add(new RDFAtom(SUBJECT_2, PREDICATE_1, OBJECT_2)); // RDFAtom(subject2, triple, object2)
@@ -236,10 +235,6 @@ public class RDFHexaStoreTest {
         assertTrue(matchedList7.contains(result7_2), "Missing substitution: " + result7_2);
         assertTrue(matchedList7.contains(result7_3), "Missing substitution: " + result7_3);
         assertFalse(matchedList7.contains(result7_4), "The atom doesn't exist: " + result7_4);
-
-        // Other cases
-//        throw new NotImplementedException("This test must be completed");
-
     }
 
     @Test
