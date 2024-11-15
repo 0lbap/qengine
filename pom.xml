@@ -12,7 +12,7 @@
     <mockito-version>5.3.1</mockito-version>
     <sonar.organization>0lbap</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <sonar.exclusions>qengine/program/*</sonar.exclusions>
+    <sonar.coverage.exclusions>src/main/java/qengine/program/*</sonar.coverage.exclusions>
   </properties>
 
   <build>
