@@ -2,6 +2,8 @@ package qengine.storage;
 
 import fr.boreal.model.logicalElements.api.*;
 import fr.boreal.model.logicalElements.impl.SubstitutionImpl;
+import org.apache.commons.collections4.BidiMap;
+import org.apache.commons.collections4.bidimap.DualHashBidiMap;
 import org.apache.commons.lang3.NotImplementedException;
 import qengine.model.RDFAtom;
 import qengine.model.StarQuery;
@@ -16,7 +18,7 @@ import java.util.*;
  */
 public class RDFHexaStore implements RDFStorage {
 
-    private Map<Integer, Term> dict = new HashMap<>();
+    private BidiMap<Integer, Term> dict = new DualHashBidiMap<>();
     private Map<Integer, Map<Integer, Set<Integer>>> atomIndexesSPO = new HashMap<>();
     private Map<Integer, Map<Integer, Set<Integer>>> atomIndexesSOP = new HashMap<>();
     private Map<Integer, Map<Integer, Set<Integer>>> atomIndexesPSO = new HashMap<>();
@@ -32,13 +34,7 @@ public class RDFHexaStore implements RDFStorage {
         Integer[] indexes = new Integer[3];
         for (int i = 0; i < 3; i++) {
             if (dict.containsValue(terms.get(i))) {
-                int finalI = i;
-                var index = dict.entrySet().stream()
-                        .filter(entry -> entry.getValue().equals(terms.get(finalI)))
-                        .findFirst()
-                        .get()
-                        .getKey();
-                indexes[i] = index;
+                indexes[i] = dict.inverseBidiMap().get(terms.get(i));
             } else {
                 dict.put(dictIndex, terms.get(i));
                 indexes[i] = dictIndex;
@@ -82,8 +78,8 @@ public class RDFHexaStore implements RDFStorage {
         switch (matchAtomCase) {
             case CONST_CONST_CONST -> {}
             case CONST_CONST_VAR -> {
-                Integer subjectIndex = getDictIndex(subject);
-                Integer predicateIndex = getDictIndex(predicate);
+                Integer subjectIndex = dict.inverseBidiMap().get(subject);
+                Integer predicateIndex = dict.inverseBidiMap().get(predicate);
 
                 // Vérifie que les index existent dans atomIndexesSPO
                 if (subjectIndex != null && predicateIndex != null &&
@@ -103,8 +99,8 @@ public class RDFHexaStore implements RDFStorage {
                 }
             }
             case CONST_VAR_CONST -> {
-                Integer subjectIndex = getDictIndex(subject);
-                Integer objectIndex = getDictIndex(object);
+                Integer subjectIndex = dict.inverseBidiMap().get(subject);
+                Integer objectIndex = dict.inverseBidiMap().get(object);
 
                 // Vérifie que les index existent dans atomIndexesSOP
                 if (subjectIndex != null && objectIndex != null &&
@@ -124,7 +120,7 @@ public class RDFHexaStore implements RDFStorage {
                 }
             }
             case CONST_VAR_VAR -> {
-                Integer subjectIndex = getDictIndex(subject);
+                Integer subjectIndex = dict.inverseBidiMap().get(subject);
 
                 // Vérifie que l'index existe dans atomIndexesSPO pour le sujet donné
                 if (subjectIndex != null && atomIndexesSPO.containsKey(subjectIndex)) {
@@ -150,8 +146,8 @@ public class RDFHexaStore implements RDFStorage {
                 }
             }
             case VAR_CONST_CONST -> {
-                Integer predicateIndex = getDictIndex(predicate);
-                Integer objectIndex = getDictIndex(object);
+                Integer predicateIndex = dict.inverseBidiMap().get(predicate);
+                Integer objectIndex = dict.inverseBidiMap().get(object);
 
                 // Vérifie que les index existent dans atomIndexesPOS
                 if (predicateIndex != null && objectIndex != null &&
@@ -171,7 +167,7 @@ public class RDFHexaStore implements RDFStorage {
                 }
             }
             case VAR_CONST_VAR -> {
-                Integer predicateIndex = getDictIndex(predicate);
+                Integer predicateIndex = dict.inverseBidiMap().get(predicate);
 
                 // Vérifie que l'index existe dans atomIndexesPSO pour le prédicat donné
                 if (predicateIndex != null && atomIndexesPSO.containsKey(predicateIndex)) {
@@ -197,7 +193,7 @@ public class RDFHexaStore implements RDFStorage {
                 }
             }
             case VAR_VAR_CONST -> {
-                Integer objectIndex = getDictIndex(object);
+                Integer objectIndex = dict.inverseBidiMap().get(object);
 
                 // Vérifie que l'index existe dans atomIndexesOSP pour l'objet donné
                 if (objectIndex != null && atomIndexesOSP.containsKey(objectIndex)) {
@@ -252,15 +248,6 @@ public class RDFHexaStore implements RDFStorage {
 
         // Retourner un itérateur sur les substitutions trouvées
         return substitutions.iterator();
-    }
-
-    // Méthode utilitaire pour récupérer l'index du dictionnaire pour un terme donné
-    private Integer getDictIndex(Term term) {
-        return dict.entrySet().stream()
-                .filter(entry -> entry.getValue().equals(term))
-                .map(Map.Entry::getKey)
-                .findFirst()
-                .orElse(null);
     }
 
     @Override
