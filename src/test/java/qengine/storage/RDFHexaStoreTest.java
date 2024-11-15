@@ -3,7 +3,6 @@ package qengine.storage;
 import fr.boreal.model.logicalElements.api.*;
 import fr.boreal.model.logicalElements.factory.impl.SameObjectTermFactory;
 import fr.boreal.model.logicalElements.impl.SubstitutionImpl;
-import org.apache.commons.lang3.NotImplementedException;
 import qengine.model.RDFAtom;
 import org.junit.jupiter.api.Test;
 import qengine.model.StarQuery;
@@ -17,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Tests unitaires pour la classe {@link RDFHexaStore}.
  */
 public class RDFHexaStoreTest {
+
     private static final Literal<String> SUBJECT_1 = SameObjectTermFactory.instance().createOrGetLiteral("subject1");
     private static final Literal<String> PREDICATE_1 = SameObjectTermFactory.instance().createOrGetLiteral("predicate1");
     private static final Literal<String> OBJECT_1 = SameObjectTermFactory.instance().createOrGetLiteral("object1");
@@ -27,7 +27,6 @@ public class RDFHexaStoreTest {
     private static final Variable VAR_X = SameObjectTermFactory.instance().createOrGetVariable("?x");
     private static final Variable VAR_Y = SameObjectTermFactory.instance().createOrGetVariable("?y");
     private static final Variable VAR_Z = SameObjectTermFactory.instance().createOrGetVariable("?z");
-
 
     @Test
     public void testAddAllRDFAtoms() {
@@ -269,7 +268,6 @@ public class RDFHexaStoreTest {
 
     @Test
     public void testMatchStarQuery() {
-
         RDFHexaStore store = new RDFHexaStore();
         store.add(new RDFAtom(SUBJECT_1, PREDICATE_1, OBJECT_1)); // RDFAtom(subject1, triple, object1)
         store.add(new RDFAtom(SUBJECT_2, PREDICATE_1, OBJECT_2)); // RDFAtom(subject2, triple, object2)
@@ -299,7 +297,12 @@ public class RDFHexaStoreTest {
         assertEquals(2, matchedList.size(), "There should be two matched RDFAtoms");
         assertTrue(matchedList.contains(result1), "Missing substitution: " + result1);
         assertFalse(matchedList.contains(result2), "Missing substitution: " + result2);
+    }
 
+    @Test
+    public void testToString() {
+        RDFHexaStore store = new RDFHexaStore();
+        assertTrue(store.toString().startsWith("HexaStore"), "HexaStore toString should start with 'HexaStore'");
     }
 
     // Vos autres tests d'HexaStore ici

@@ -99,8 +99,12 @@
               <goal>report</goal>
             </goals>
             <configuration>
+              <excludes>
+                <exclude>qengine/program/*</exclude>
+              </excludes>
               <formats>
                 <format>XML</format>
+                <format>HTML</format>
               </formats>
             </configuration>
           </execution>

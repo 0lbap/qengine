@@ -4,7 +4,6 @@ import fr.boreal.model.logicalElements.api.*;
 import fr.boreal.model.logicalElements.impl.SubstitutionImpl;
 import org.apache.commons.collections4.BidiMap;
 import org.apache.commons.collections4.bidimap.DualHashBidiMap;
-import org.apache.commons.lang3.NotImplementedException;
 import qengine.model.RDFAtom;
 import qengine.model.StarQuery;
 
