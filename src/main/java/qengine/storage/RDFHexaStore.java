@@ -69,44 +69,208 @@ public class RDFHexaStore implements RDFStorage {
         return size;
     }
 
+    //
     @Override
     public Iterator<Substitution> match(RDFAtom atom) {
+
         Term subject = atom.getTripleSubject();
         Term predicate = atom.getTriplePredicate();
         Term object = atom.getTripleObject();
 
-        MatchAtomCase matchAtomCase = getMatchAtomCase(subject, predicate, object);
+        List<Substitution> substitutions = new ArrayList<>();
 
-        Substitution substitution = new SubstitutionImpl();
+        // Cas CONST_CONST_VAR où le sujet et le prédicat sont constants, et l'objet est une variable
+        if (!subject.isVariable() && !predicate.isVariable() && object.isVariable()) {
+            Integer subjectIndex = getDictIndex(subject);
+            Integer predicateIndex = getDictIndex(predicate);
 
-        switch (matchAtomCase) {
-            case CONST_CONST_CONST -> {
-                return null;
-            }
-            case CONST_CONST_VAR -> {
-                // TODO: use SPO
-            }
-            case CONST_VAR_CONST -> {
-                // TODO: use SOP or OSP
-            }
-            case CONST_VAR_VAR -> {
-                // TODO: use SPO or SOP
-            }
-            case VAR_CONST_CONST -> {
-                // TODO: use POS or OPS
-            }
-            case VAR_CONST_VAR -> {
-                // TODO: use PSO or POS
-            }
-            case VAR_VAR_CONST -> {
-                // TODO: use OPS or OSP
-            }
-            case VAR_VAR_VAR -> {
-                // TODO: use anything
+            // Vérifie que les index existent dans atomIndexesSPO
+            if (subjectIndex != null && predicateIndex != null &&
+                    atomIndexesSPO.containsKey(subjectIndex) &&
+                    atomIndexesSPO.get(subjectIndex).containsKey(predicateIndex)) {
+
+                // Obtenir l'ensemble des objets pour ce sujet et prédicat
+                Set<Integer> objectIndexes = atomIndexesSPO.get(subjectIndex).get(predicateIndex);
+
+                // Créer des substitutions pour chaque objet trouvé
+                for (Integer objectIndex : objectIndexes) {
+                    Term matchedObject = dict.get(objectIndex);
+                    Substitution substitution = new SubstitutionImpl();
+                    substitution.add((Variable) object, matchedObject); // Associer la variable objet avec la valeur trouvée
+                    substitutions.add(substitution);
+                }
             }
         }
 
-        return null;
+        // Cas CONST_VAR_CONST où le sujet est constant, le prédicat est une variable, et l'objet est constant
+        if (!subject.isVariable() && predicate.isVariable() && !object.isVariable()) {
+            Integer subjectIndex = getDictIndex(subject);
+            Integer objectIndex = getDictIndex(object);
+
+            // Vérifie que les index existent dans atomIndexesSOP
+            if (subjectIndex != null && objectIndex != null &&
+                    atomIndexesSOP.containsKey(subjectIndex) &&
+                    atomIndexesSOP.get(subjectIndex).containsKey(objectIndex)) {
+
+                // Obtenir l'ensemble des prédicats pour ce sujet et objet
+                Set<Integer> predicateIndexes = atomIndexesSOP.get(subjectIndex).get(objectIndex);
+
+                // Créer des substitutions pour chaque prédicat trouvé
+                for (Integer predicateIndex : predicateIndexes) {
+                    Term matchedPredicate = dict.get(predicateIndex);
+                    Substitution substitution = new SubstitutionImpl();
+                    substitution.add((Variable) predicate, matchedPredicate); // Associer la variable prédicat avec la valeur trouvée
+                    substitutions.add(substitution);
+                }
+            }
+        }
+
+        // Cas VAR_CONST_CONST où le sujet est une variable, le prédicat est constant, et l'objet est constant
+        if (subject.isVariable() && !predicate.isVariable() && !object.isVariable()) {
+            Integer predicateIndex = getDictIndex(predicate);
+            Integer objectIndex = getDictIndex(object);
+
+            // Vérifie que les index existent dans atomIndexesPOS
+            if (predicateIndex != null && objectIndex != null &&
+                    atomIndexesPOS.containsKey(predicateIndex) &&
+                    atomIndexesPOS.get(predicateIndex).containsKey(objectIndex)) {
+
+                // Obtenir l'ensemble des sujets pour ce prédicat et objet
+                Set<Integer> subjectIndexes = atomIndexesPOS.get(predicateIndex).get(objectIndex);
+
+                // Créer des substitutions pour chaque sujet trouvé
+                for (Integer subjectIndex : subjectIndexes) {
+                    Term matchedSubject = dict.get(subjectIndex);
+                    Substitution substitution = new SubstitutionImpl();
+                    substitution.add((Variable) subject, matchedSubject); // Associer la variable sujet avec la valeur trouvée
+                    substitutions.add(substitution);
+                }
+            }
+        }
+
+        // Cas CONST_VAR_VAR où le sujet est une variable, le prédicat est constant, et l'objet est constant
+        if (!subject.isVariable() && predicate.isVariable() && object.isVariable()) {
+            Integer subjectIndex = getDictIndex(subject);
+
+            // Vérifie que l'index existe dans atomIndexesSPO pour le sujet donné
+            if (subjectIndex != null && atomIndexesSPO.containsKey(subjectIndex)) {
+                Map<Integer, Set<Integer>> predicatesMap = atomIndexesSPO.get(subjectIndex);
+
+                // Parcourir tous les prédicats pour le sujet constant
+                for (Map.Entry<Integer, Set<Integer>> entry : predicatesMap.entrySet()) {
+                    Integer predicateIndex = entry.getKey();
+                    Set<Integer> objectIndexes = entry.getValue();
+
+                    // Parcourir tous les objets pour chaque prédicat
+                    for (Integer objectIndex : objectIndexes) {
+                        Term matchedPredicate = dict.get(predicateIndex);
+                        Term matchedObject = dict.get(objectIndex);
+
+                        // Créer une substitution pour chaque couple (prédicat, objet) trouvé
+                        Substitution substitution = new SubstitutionImpl();
+                        substitution.add((Variable) predicate, matchedPredicate);
+                        substitution.add((Variable) object, matchedObject);
+                        substitutions.add(substitution);
+                    }
+                }
+            }
+        }
+
+        // Cas VAR_VAR_CONST où le sujet et le prédicat sont variables, et l'objet est constant
+        if (subject.isVariable() && predicate.isVariable() && !object.isVariable()) {
+            Integer objectIndex = getDictIndex(object);
+
+            // Vérifie que l'index existe dans atomIndexesOSP pour l'objet donné
+            if (objectIndex != null && atomIndexesOSP.containsKey(objectIndex)) {
+                Map<Integer, Set<Integer>> subjectsMap = atomIndexesOSP.get(objectIndex);
+
+                // Parcourir tous les sujets pour l'objet constant
+                for (Map.Entry<Integer, Set<Integer>> entry : subjectsMap.entrySet()) {
+                    Integer subjectIndex = entry.getKey();
+                    Set<Integer> predicateIndexes = entry.getValue();
+
+                    // Parcourir tous les prédicats pour chaque sujet
+                    for (Integer predicateIndex : predicateIndexes) {
+                        Term matchedSubject = dict.get(subjectIndex);
+                        Term matchedPredicate = dict.get(predicateIndex);
+
+                        // Créer une substitution pour chaque couple (sujet, prédicat) trouvé
+                        Substitution substitution = new SubstitutionImpl();
+                        substitution.add((Variable) subject, matchedSubject);
+                        substitution.add((Variable) predicate, matchedPredicate);
+                        substitutions.add(substitution);
+                    }
+                }
+            }
+        }
+
+        // Cas VAR_CONST_VAR où le sujet et l'objet sont variables, et le prédicat est constant
+        if (subject.isVariable() && !predicate.isVariable() && object.isVariable()) {
+            Integer predicateIndex = getDictIndex(predicate);
+
+            // Vérifie que l'index existe dans atomIndexesPSO pour le prédicat donné
+            if (predicateIndex != null && atomIndexesPSO.containsKey(predicateIndex)) {
+                Map<Integer, Set<Integer>> subjectsMap = atomIndexesPSO.get(predicateIndex);
+
+                // Parcourir tous les sujets pour le prédicat constant
+                for (Map.Entry<Integer, Set<Integer>> entry : subjectsMap.entrySet()) {
+                    Integer subjectIndex = entry.getKey();
+                    Set<Integer> objectIndexes = entry.getValue();
+
+                    // Parcourir tous les objets pour chaque sujet
+                    for (Integer objectIndex : objectIndexes) {
+                        Term matchedSubject = dict.get(subjectIndex);
+                        Term matchedObject = dict.get(objectIndex);
+
+                        // Créer une substitution pour chaque couple (sujet, objet) trouvé
+                        Substitution substitution = new SubstitutionImpl();
+                        substitution.add((Variable) subject, matchedSubject);
+                        substitution.add((Variable) object, matchedObject);
+                        substitutions.add(substitution);
+                    }
+                }
+            }
+        }
+
+        // Cas VAR_VAR_VAR où le sujet, le prédicat et l'objet sont variables
+        if (subject.isVariable() && predicate.isVariable() && object.isVariable()) {
+            // Parcourir tous les sujets dans atomIndexesSPO
+            for (Map.Entry<Integer, Map<Integer, Set<Integer>>> subjectEntry : atomIndexesSPO.entrySet()) {
+                Integer subjectIndex = subjectEntry.getKey();
+                Term matchedSubject = dict.get(subjectIndex);
+
+                // Parcourir tous les prédicats pour chaque sujet
+                for (Map.Entry<Integer, Set<Integer>> predicateEntry : subjectEntry.getValue().entrySet()) {
+                    Integer predicateIndex = predicateEntry.getKey();
+                    Term matchedPredicate = dict.get(predicateIndex);
+
+                    // Parcourir tous les objets pour chaque prédicat
+                    for (Integer objectIndex : predicateEntry.getValue()) {
+                        Term matchedObject = dict.get(objectIndex);
+
+                        // Créer une substitution pour chaque triplet (sujet, prédicat, objet) trouvé
+                        Substitution substitution = new SubstitutionImpl();
+                        substitution.add((Variable) subject, matchedSubject);
+                        substitution.add((Variable) predicate, matchedPredicate);
+                        substitution.add((Variable) object, matchedObject);
+                        substitutions.add(substitution);
+                    }
+                }
+            }
+        }
+
+        // Retourner un itérateur sur les substitutions trouvées
+        return substitutions.iterator();
+
+    }
+
+    // Méthode utilitaire pour récupérer l'index du dictionnaire pour un terme donné
+    private Integer getDictIndex(Term term) {
+        return dict.entrySet().stream()
+                .filter(entry -> entry.getValue().equals(term))
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse(null);
     }
 
     @Override
@@ -162,20 +326,42 @@ public class RDFHexaStore implements RDFStorage {
         VAR_VAR_VAR,
     }
 
+// Fonction de Pablo
+//    private MatchAtomCase getMatchAtomCase(Term subject, Term predicate, Term object) {
+//        if (subject.isConstant() && predicate.isConstant() && object.isConstant()) {
+//            return MatchAtomCase.CONST_CONST_CONST;
+//        } else if (subject.isConstant() && predicate.isConstant() && object.isVariable()) {
+//            return MatchAtomCase.CONST_CONST_VAR;
+//        } else if (subject.isConstant() && predicate.isVariable() && object.isConstant()) {
+//            return MatchAtomCase.CONST_VAR_CONST;
+//        } else if (subject.isConstant() && predicate.isVariable() && object.isVariable()) {
+//            return MatchAtomCase.CONST_VAR_VAR;
+//        } else if (subject.isVariable() && predicate.isConstant() && object.isConstant()) {
+//            return MatchAtomCase.VAR_CONST_CONST;
+//        } else if (subject.isVariable() && predicate.isConstant() && object.isVariable()) {
+//            return MatchAtomCase.VAR_CONST_VAR;
+//        } else if (subject.isVariable() && predicate.isVariable() && object.isConstant()) {
+//            return MatchAtomCase.VAR_VAR_CONST;
+//        } else if (subject.isVariable() && predicate.isVariable() && object.isVariable()) {
+//            return MatchAtomCase.VAR_VAR_VAR;
+//        }
+//        return null;
+//    }
+
     private MatchAtomCase getMatchAtomCase(Term subject, Term predicate, Term object) {
-        if (subject.isConstant() && predicate.isConstant() && object.isConstant()) {
+        if (!subject.isVariable() && !predicate.isVariable() && !object.isVariable()) {
             return MatchAtomCase.CONST_CONST_CONST;
-        } else if (subject.isConstant() && predicate.isConstant() && object.isVariable()) {
+        } else if (!subject.isVariable() && !predicate.isVariable() && object.isVariable()) {
             return MatchAtomCase.CONST_CONST_VAR;
-        } else if (subject.isConstant() && predicate.isVariable() && object.isConstant()) {
+        } else if (!subject.isVariable() && predicate.isVariable() && !object.isVariable()) {
             return MatchAtomCase.CONST_VAR_CONST;
-        } else if (subject.isConstant() && predicate.isVariable() && object.isVariable()) {
+        } else if (!subject.isVariable() && predicate.isVariable() && object.isVariable()) {
             return MatchAtomCase.CONST_VAR_VAR;
-        } else if (subject.isVariable() && predicate.isConstant() && object.isConstant()) {
+        } else if (subject.isVariable() && !predicate.isVariable() && !object.isVariable()) {
             return MatchAtomCase.VAR_CONST_CONST;
-        } else if (subject.isVariable() && predicate.isConstant() && object.isVariable()) {
+        } else if (subject.isVariable() && !predicate.isVariable() && object.isVariable()) {
             return MatchAtomCase.VAR_CONST_VAR;
-        } else if (subject.isVariable() && predicate.isVariable() && object.isConstant()) {
+        } else if (subject.isVariable() && predicate.isVariable() && !object.isVariable()) {
             return MatchAtomCase.VAR_VAR_CONST;
         } else if (subject.isVariable() && predicate.isVariable() && object.isVariable()) {
             return MatchAtomCase.VAR_VAR_VAR;
