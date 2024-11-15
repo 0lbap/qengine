@@ -101,6 +101,29 @@ public class RDFHexaStoreTest {
         store.add(new RDFAtom(SUBJECT_1, PREDICATE_1, OBJECT_3)); // RDFAtom(subject1, triple, object3)
 
         // CASE 1 | <x, y, ?z>
+        testMatchAtomCase1(store);
+
+        // CASE 2 | <x, ?y, z>
+        testMatchAtomCase2(store);
+
+        // CASE 3 | <?x, y, z>
+        testMatchAtomCase3(store);
+
+        // CASE 4 | <x, ?y, ?z>
+        testMatchAtomCase4(store);
+
+        // CASE 5 | <?x, ?y, z>
+        testMatchAtomCase5(store);
+
+        // CASE 6 | <?x, y, ?z>
+        testMatchAtomCase6(store);
+
+        // CASE 7 | <?x, ?y, ?z>
+        testMatchAtomCase7(store);
+
+    }
+
+    private static void testMatchAtomCase1(RDFHexaStore store) {
         RDFAtom matchingAtom = new RDFAtom(SUBJECT_1, PREDICATE_1, VAR_X); // RDFAtom(subject1, predicate1, X)
         Iterator<Substitution> matchedAtoms = store.match(matchingAtom);
         List<Substitution> matchedList = new ArrayList<>();
@@ -114,8 +137,9 @@ public class RDFHexaStoreTest {
         assertEquals(2, matchedList.size(), "There should be two matched RDFAtoms");
         assertTrue(matchedList.contains(firstResult), "Missing substitution: " + firstResult);
         assertTrue(matchedList.contains(secondResult), "Missing substitution: " + secondResult);
+    }
 
-        // CASE 2 | <x, ?y, z>
+    private static void testMatchAtomCase2(RDFHexaStore store) {
         RDFAtom matchingAtom2 = new RDFAtom(SUBJECT_1, VAR_X, OBJECT_1);
         Iterator<Substitution> matchedAtoms2 = store.match(matchingAtom2);
         List<Substitution> matchedList2 = new ArrayList<>();
@@ -130,8 +154,9 @@ public class RDFHexaStoreTest {
         assertEquals(1, matchedList2.size(), "There should be one matched RDFAtom");
         assertTrue(matchedList2.contains(firstResult2), "Missing substitution: " + firstResult2);
         assertFalse(matchedList2.contains(secondResult2), "The atom doesn't exist: " + secondResult2);
+    }
 
-        // CASE 3 | <?x, y, z>
+    private static void testMatchAtomCase3(RDFHexaStore store) {
         RDFAtom matchingAtom3 = new RDFAtom(VAR_X, PREDICATE_1, OBJECT_3);
         Iterator<Substitution> matchedAtoms3 = store.match(matchingAtom3);
         List<Substitution> matchedList3 = new ArrayList<>();
@@ -146,8 +171,9 @@ public class RDFHexaStoreTest {
         assertEquals(1, matchedList3.size(), "There should be one matched RDFAtom");
         assertTrue(matchedList3.contains(firstResult3), "Missing substitution: " + firstResult3);
         assertFalse(matchedList3.contains(secondResult3), "The atom doesn't exist: " + secondResult3);
+    }
 
-        // CASE 4 | <x, ?y, ?z>
+    private static void testMatchAtomCase4(RDFHexaStore store) {
         RDFAtom matchingAtom4 = new RDFAtom(SUBJECT_1, VAR_Y, VAR_X);
         Iterator<Substitution> matchedAtoms4 = store.match(matchingAtom4);
         List<Substitution> matchedList4 = new ArrayList<>();
@@ -164,8 +190,9 @@ public class RDFHexaStoreTest {
         assertEquals(2, matchedList4.size(), "There should be two matched RDFAtom");
         assertTrue(matchedList4.contains(firstResult4), "Missing substitution: " + firstResult4);
         assertFalse(matchedList4.contains(secondResult4), "The atom doesn't exist: " + secondResult4);
+    }
 
-        // CASE 5 | <?x, ?y, z>
+    private static void testMatchAtomCase5(RDFHexaStore store) {
         RDFAtom matchingAtom5 = new RDFAtom(VAR_X, VAR_Y, OBJECT_2);
         Iterator<Substitution> matchedAtoms5 = store.match(matchingAtom5);
         List<Substitution> matchedList5 = new ArrayList<>();
@@ -182,8 +209,9 @@ public class RDFHexaStoreTest {
         assertEquals(1, matchedList5.size(), "There should be one matched RDFAtom");
         assertTrue(matchedList5.contains(firstResult5), "Missing substitution: " + firstResult5);
         assertFalse(matchedList5.contains(secondResult5), "The atom doesn't exist: " + secondResult5);
+    }
 
-        // CASE 6 | <?x, y, ?z>
+    private static void testMatchAtomCase6(RDFHexaStore store) {
         RDFAtom matchingAtom6 = new RDFAtom(VAR_X, PREDICATE_1, VAR_Y);
         Iterator<Substitution> matchedAtoms6 = store.match(matchingAtom6);
         List<Substitution> matchedList6 = new ArrayList<>();
@@ -200,8 +228,9 @@ public class RDFHexaStoreTest {
         assertEquals(3, matchedList6.size(), "There should be three matched RDFAtom");
         assertTrue(matchedList6.contains(firstResult6), "Missing substitution: " + firstResult6);
         assertFalse(matchedList6.contains(secondResult6), "Missing substitution: " + secondResult6);
+    }
 
-        // CASE 7 | <?x, ?y, ?z>
+    private static void testMatchAtomCase7(RDFHexaStore store) {
         RDFAtom matchingAtom7 = new RDFAtom(VAR_X, VAR_Y, VAR_Z); // Toutes les composantes sont des variables
         Iterator<Substitution> matchedAtoms7 = store.match(matchingAtom7);
         List<Substitution> matchedList7 = new ArrayList<>();
