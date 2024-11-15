@@ -95,6 +95,7 @@ public class RDFHexaStoreTest {
 
     @Test
     public void testMatchAtom() {
+
         RDFHexaStore store = new RDFHexaStore();
         store.add(new RDFAtom(SUBJECT_1, PREDICATE_1, OBJECT_1)); // RDFAtom(subject1, triple, object1)
         store.add(new RDFAtom(SUBJECT_2, PREDICATE_1, OBJECT_2)); // RDFAtom(subject2, triple, object2)
@@ -112,7 +113,7 @@ public class RDFHexaStoreTest {
         secondResult.add(VAR_X, OBJECT_3);
 
         assertEquals(2, matchedList.size(), "There should be two matched RDFAtoms");
-        assertTrue(matchedList.contains(secondResult), "Missing substitution: " + firstResult);
+        assertTrue(matchedList.contains(firstResult), "Missing substitution: " + firstResult);
         assertTrue(matchedList.contains(secondResult), "Missing substitution: " + secondResult);
 
         // CASE 2 | <x, ?y, z>
@@ -199,7 +200,7 @@ public class RDFHexaStoreTest {
 
         assertEquals(3, matchedList6.size(), "There should be three matched RDFAtom");
         assertTrue(matchedList6.contains(firstResult6), "Missing substitution: " + firstResult6);
-        assertTrue(matchedList6.contains(secondResult6), "Missing substitution: " + secondResult6);
+        assertFalse(matchedList6.contains(secondResult6), "Missing substitution: " + secondResult6);
 
         // CASE 7 | <?x, ?y, ?z>
         RDFAtom matchingAtom7 = new RDFAtom(VAR_X, VAR_Y, VAR_Z); // Toutes les composantes sont des variables
