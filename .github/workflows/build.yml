@@ -32,13 +32,8 @@ jobs:
           restore-keys: ${{ runner.os }}-m2
       - name: Build with JaCoCo
         run: mvn -B clean verify # Run tests and generate coverage report
-      - name: Debug Coverage and Test Reports
-        run: |
-          ls -la target/site/jacoco
-          cat target/site/jacoco/jacoco.xml
-          ls -la target/surefire-reports
-#      - name: Analyze with Sonar
-#        env:
-#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
-#          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-#        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=0lbap_qengine -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml # Analyze with SonarQube
+      - name: Analyze with Sonar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: mvn org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=0lbap_qengine -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml # Analyze with SonarQube
