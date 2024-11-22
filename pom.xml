@@ -13,6 +13,7 @@
     <sonar.organization>0lbap</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
     <sonar.coverage.exclusions>src/main/java/qengine/program/*</sonar.coverage.exclusions>
+    <sonar.cpd.exclusions>src/main/java/qengine/program/*</sonar.cpd.exclusions>
   </properties>
 
   <build>
