@@ -27,6 +27,9 @@ public class RDFHexaStoreTest {
     private static final Variable VAR_X = SameObjectTermFactory.instance().createOrGetVariable("?x");
     private static final Variable VAR_Y = SameObjectTermFactory.instance().createOrGetVariable("?y");
     private static final Variable VAR_Z = SameObjectTermFactory.instance().createOrGetVariable("?z");
+    private static final Literal<String> SUBJECT_5 = SameObjectTermFactory.instance().createOrGetLiteral("subject5");
+    private static final Literal<String> PREDICATE_5 = SameObjectTermFactory.instance().createOrGetLiteral("predicate5");
+    private static final Literal<String> OBJECT_5 = SameObjectTermFactory.instance().createOrGetLiteral("object5");
 
     @Test
     public void testAddAllRDFAtoms() {
@@ -100,6 +103,9 @@ public class RDFHexaStoreTest {
         store.add(new RDFAtom(SUBJECT_2, PREDICATE_1, OBJECT_2)); // RDFAtom(subject2, triple, object2)
         store.add(new RDFAtom(SUBJECT_1, PREDICATE_1, OBJECT_3)); // RDFAtom(subject1, triple, object3)
 
+        // CASE <x, y, z> where x or y or z doesn't exist in the dictionary store
+        testMatchCaseNonExistingTermInStore(store);
+
         // CASE 0 | <x, y, z>
         testMatchAtomCase0(store);
 
@@ -123,6 +129,32 @@ public class RDFHexaStoreTest {
 
         // CASE 7 | <?x, ?y, ?z>
         testMatchAtomCase7(store);
+    }
+
+    private static void testMatchCaseNonExistingTermInStore(RDFHexaStore store) {
+
+        RDFAtom matchingAtom = new RDFAtom(SUBJECT_5, PREDICATE_1, OBJECT_1); // RDFAtom(subject5, predicate1, object1)
+        Iterator<Substitution> matchedAtoms = store.match(matchingAtom);
+        List<Substitution> matchedList = new ArrayList<>();
+        matchedAtoms.forEachRemaining(matchedList::add);
+
+        assertTrue(matchedList.isEmpty(), "There should not be any substitution for a non existing RDFAtom");
+
+        RDFAtom matchingAtom2 = new RDFAtom(SUBJECT_1, PREDICATE_5, OBJECT_1); // RDFAtom(subject1, predicate5, object1)
+        Iterator<Substitution> matchedAtoms2 = store.match(matchingAtom2);
+        List<Substitution> matchedList2 = new ArrayList<>();
+        matchedAtoms2.forEachRemaining(matchedList2::add);
+
+        assertTrue(matchedList2.isEmpty(), "There should not be any substitution for a non existing RDFAtom");
+
+        RDFAtom matchingAtom3 = new RDFAtom(SUBJECT_1, PREDICATE_1, OBJECT_5); // RDFAtom(subject1, predicate1, object5)
+        Iterator<Substitution> matchedAtoms3 = store.match(matchingAtom3);
+        List<Substitution> matchedList3 = new ArrayList<>();
+        matchedAtoms3.forEachRemaining(matchedList3::add);
+
+        assertTrue(matchedList3.isEmpty(), "There should not be any substitution for a non existing RDFAtom");
+
+
     }
 
     private static void testMatchAtomCase0(RDFHexaStore store) {
