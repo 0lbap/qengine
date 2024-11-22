@@ -242,7 +242,6 @@ public class RDFHexaStore implements RDFStorage {
                     }
                 }
             }
-            case null -> {}
         }
 
         // Retourner un itérateur sur les substitutions trouvées
