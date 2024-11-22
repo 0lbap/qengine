@@ -251,15 +251,7 @@ public class RDFHexaStore implements RDFStorage {
 
     @Override
     public Iterator<Substitution> match(StarQuery q) {
-
         List<RDFAtom> rdfAtoms = q.getRdfAtoms();
-
-        // Vérifier que les variables réponses sont présentes dans les triplets RDF
-//        for (Variable answerVariable : q.getAnswerVariables()) {
-//            if (!dict.containsValue(answerVariable)) {
-//                throw new IllegalArgumentException("La variable réponse " + answerVariable + " n'est pas présente dans les triplets RDF.");
-//            }
-//        }
 
         // Stocker les substitutions trouvées
         List<Substitution> substitutions = new ArrayList<>();
@@ -286,7 +278,6 @@ public class RDFHexaStore implements RDFStorage {
 
         // Retourner un itérateur sur les substitutions trouvées
         return substitutions.iterator();
-
     }
 
     @Override
@@ -340,22 +331,26 @@ public class RDFHexaStore implements RDFStorage {
     private MatchAtomCase getMatchAtomCase(Term subject, Term predicate, Term object) {
         if (!subject.isVariable() && !predicate.isVariable() && !object.isVariable()) {
             return MatchAtomCase.CONST_CONST_CONST;
-        } else if (!subject.isVariable() && !predicate.isVariable() && object.isVariable()) {
-            return MatchAtomCase.CONST_CONST_VAR;
-        } else if (!subject.isVariable() && predicate.isVariable() && !object.isVariable()) {
-            return MatchAtomCase.CONST_VAR_CONST;
-        } else if (!subject.isVariable() && predicate.isVariable() && object.isVariable()) {
-            return MatchAtomCase.CONST_VAR_VAR;
-        } else if (subject.isVariable() && !predicate.isVariable() && !object.isVariable()) {
-            return MatchAtomCase.VAR_CONST_CONST;
-        } else if (subject.isVariable() && !predicate.isVariable() && object.isVariable()) {
-            return MatchAtomCase.VAR_CONST_VAR;
-        } else if (subject.isVariable() && predicate.isVariable() && !object.isVariable()) {
-            return MatchAtomCase.VAR_VAR_CONST;
-        } else if (subject.isVariable() && predicate.isVariable() && object.isVariable()) {
-            return MatchAtomCase.VAR_VAR_VAR;
         }
-        return null;
+        if (!subject.isVariable() && !predicate.isVariable() && object.isVariable()) {
+            return MatchAtomCase.CONST_CONST_VAR;
+        }
+        if (!subject.isVariable() && predicate.isVariable() && !object.isVariable()) {
+            return MatchAtomCase.CONST_VAR_CONST;
+        }
+        if (!subject.isVariable() && predicate.isVariable() && object.isVariable()) {
+            return MatchAtomCase.CONST_VAR_VAR;
+        }
+        if (subject.isVariable() && !predicate.isVariable() && !object.isVariable()) {
+            return MatchAtomCase.VAR_CONST_CONST;
+        }
+        if (subject.isVariable() && !predicate.isVariable() && object.isVariable()) {
+            return MatchAtomCase.VAR_CONST_VAR;
+        }
+        if (subject.isVariable() && predicate.isVariable() && !object.isVariable()) {
+            return MatchAtomCase.VAR_VAR_CONST;
+        }
+        return MatchAtomCase.VAR_VAR_VAR;
     }
 
     private void addIndex(Map<Integer, Map<Integer, Set<Integer>>> atomIndexes, int x, int y, int z) {

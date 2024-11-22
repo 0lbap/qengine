@@ -100,6 +100,9 @@ public class RDFHexaStoreTest {
         store.add(new RDFAtom(SUBJECT_2, PREDICATE_1, OBJECT_2)); // RDFAtom(subject2, triple, object2)
         store.add(new RDFAtom(SUBJECT_1, PREDICATE_1, OBJECT_3)); // RDFAtom(subject1, triple, object3)
 
+        // CASE 0 | <x, y, z>
+        testMatchAtomCase0(store);
+
         // CASE 1 | <x, y, ?z>
         testMatchAtomCase1(store);
 
@@ -120,7 +123,13 @@ public class RDFHexaStoreTest {
 
         // CASE 7 | <?x, ?y, ?z>
         testMatchAtomCase7(store);
+    }
 
+    private static void testMatchAtomCase0(RDFHexaStore store) {
+        RDFAtom matchingAtom = new RDFAtom(SUBJECT_1, PREDICATE_1, OBJECT_1); // RDFAtom(subject1, predicate1, object1)
+        Iterator<Substitution> matchedAtoms = store.match(matchingAtom);
+
+        assertFalse(matchedAtoms.hasNext(), "There should not be any substitution for a non variable RDFAtom");
     }
 
     private static void testMatchAtomCase1(RDFHexaStore store) {
