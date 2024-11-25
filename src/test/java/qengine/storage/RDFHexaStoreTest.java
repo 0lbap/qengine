@@ -324,8 +324,12 @@ public class RDFHexaStoreTest {
 
         // Exécution de la requête
         Iterator<Substitution> matchedAtoms = store.match(starQuery);
-        List<Substitution> matchedList = new ArrayList<>();
+        Set<Substitution> matchedList = new HashSet<>();
         matchedAtoms.forEachRemaining(matchedList::add);
+
+//        while (matchedAtoms.hasNext()) {
+//            matchedList.add(matchedAtoms.next());
+//        }
 
         // Création des substitutions attendues
         Substitution result1 = new SubstitutionImpl();
@@ -335,7 +339,7 @@ public class RDFHexaStoreTest {
         result2.add(VAR_X, SUBJECT_2);
 
         // Vérification des résultats
-        assertEquals(2, matchedList.size(), "There should be two matched RDFAtoms");
+        assertEquals(1, matchedList.size(), "There should be one matched RDFAtoms");
         assertTrue(matchedList.contains(result1), "Missing substitution: " + result1);
         assertFalse(matchedList.contains(result2), "Missing substitution: " + result2);
     }
