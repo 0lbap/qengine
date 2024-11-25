@@ -70,7 +70,7 @@ public class RDFHexaStore implements RDFStorage {
         Term predicate = atom.getTriplePredicate();
         Term object = atom.getTripleObject();
 
-        List<Substitution> substitutions = new ArrayList<>();
+        Set<Substitution> substitutions = new HashSet<>();
 
         MatchAtomCase matchAtomCase = getMatchAtomCase(subject, predicate, object);
 
@@ -253,7 +253,7 @@ public class RDFHexaStore implements RDFStorage {
         List<RDFAtom> rdfAtoms = q.getRdfAtoms();
 
         // Stocker les substitutions trouvées
-        List<Substitution> substitutions = new ArrayList<>();
+        Set<Substitution> substitutions = new HashSet<>();
 
         // Parcourir tous les triplets RDF
         for (RDFAtom atom : rdfAtoms) {
