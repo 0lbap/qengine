@@ -250,32 +250,21 @@ public class RDFHexaStore implements RDFStorage {
 
     @Override
     public Iterator<Substitution> match(StarQuery q) {
-        List<RDFAtom> rdfAtoms = q.getRdfAtoms();
-
-        // Stocker les substitutions trouvées
         Set<Substitution> substitutions = new HashSet<>();
 
-        // Parcourir tous les triplets RDF
-        for (RDFAtom atom : rdfAtoms) {
+        for (RDFAtom atom : q.getRdfAtoms()) {
             Iterator<Substitution> matchIterator = match(atom);
+            Set<Substitution> intersectedSubstitutions = new HashSet<>();
 
-            // Parcourir toutes les substitutions trouvées pour chaque triplet RDF
             while (matchIterator.hasNext()) {
                 Substitution substitution = matchIterator.next();
-                Substitution newSubstitution = new SubstitutionImpl();
-
-                // Ajouter les variables réponses avec leurs valeurs correspondantes
-                for (Variable answerVariable : q.getAnswerVariables()) {
-                    newSubstitution.add(answerVariable, substitution.toMap().get(answerVariable));
+                if (substitutions.contains(substitution) || q.getRdfAtoms().getFirst().equals(atom)) {
+                    intersectedSubstitutions.add(substitution);
                 }
-
-                substitutions.add(newSubstitution);
-
             }
-
+            substitutions = intersectedSubstitutions;
         }
 
-        // Retourner un itérateur sur les substitutions trouvées
         return substitutions.iterator();
     }
 
