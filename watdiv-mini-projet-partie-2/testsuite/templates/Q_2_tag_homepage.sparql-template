@@ -5,3 +5,4 @@ SELECT ?v0  WHERE {
 	?v0	og:tag	%v1% .
 	?v0	foaf:homepage	%v2% .
 }
+
