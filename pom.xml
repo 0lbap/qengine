@@ -207,6 +207,14 @@
       </exclusions>
     </dependency>
 
+    <!--  OSHI  -->
+    <dependency>
+      <groupId>com.github.oshi</groupId>
+      <artifactId>oshi-core</artifactId>
+      <version>6.4.2</version> <!-- Vérifiez la version la plus récente -->
+    </dependency>
+
+
     <!-- TESTS UNITAIRES -->
     <dependency>
       <groupId>junit</groupId>
