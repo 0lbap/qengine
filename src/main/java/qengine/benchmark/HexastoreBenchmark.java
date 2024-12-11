@@ -17,11 +17,10 @@ import java.util.*;
 public class HexastoreBenchmark {
 
     private static final String DATA_DIR = "data/";
-    private static final String DATA_FILE = DATA_DIR + "100K.nt";
+    private static final String DATA_FILE = DATA_DIR + "500K.nt";
     private static final String QUERYSET_DIR_100 = "watdiv-mini-projet-partie-2/testsuite/queries/100";
     private static final String QUERYSET_DIR_1000 = "watdiv-mini-projet-partie-2/testsuite/queries/1000";
     private static final String QUERYSET_DIR_10000 = "watdiv-mini-projet-partie-2/testsuite/queries/10000";
-    private static final String QUERYSET_DIR_100000 = "watdiv-mini-projet-partie-2/testsuite/queries/100000";
 
     public static void main(String[] args) throws IOException {
         List<RDFAtom> rdfAtoms = parseRDFData(DATA_FILE);
@@ -31,7 +30,7 @@ public class HexastoreBenchmark {
 
         System.out.println("Données RDF chargées dans le store. Début du benchmark...");
 
-        Map<String, Map<String, Long>> results = executeGroupedQueries(QUERYSET_DIR_100000, store);
+        Map<String, Map<String, Long>> results = executeGroupedQueries(QUERYSET_DIR_1000, store);
         saveResultsToFile(results);
 
         System.out.println("Benchmarks terminés. Résultats enregistrés dans le répertoire 'benchmark'.");

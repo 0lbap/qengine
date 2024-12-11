@@ -24,7 +24,7 @@ import java.util.*;
 public class IntegraalBenchmark {
 
     private static final String DATA_DIR = "data/";
-    private static final String DATA_FILE = DATA_DIR + "100K.nt";
+    private static final String DATA_FILE = DATA_DIR + "500K.nt";
     private static final String QUERYSET_DIR_100 = "watdiv-mini-projet-partie-2/testsuite/queries/100";
     private static final String QUERYSET_DIR_1000 = "watdiv-mini-projet-partie-2/testsuite/queries/1000";
     private static final String QUERYSET_DIR_10000 = "watdiv-mini-projet-partie-2/testsuite/queries/10000";
@@ -39,7 +39,7 @@ public class IntegraalBenchmark {
 
         System.out.println("Données RDF chargées dans Integraal. Début du benchmark...");
 
-        Map<String, Map<String, Long>> results = executeGroupedQueries(QUERYSET_DIR_10000, factBase);
+        Map<String, Map<String, Long>> results = executeGroupedQueries(QUERYSET_DIR_1000, factBase);
         saveResultsToFile(results);
 
         System.out.println("Benchmarks terminés. Résultats enregistrés dans le répertoire 'benchmark'.");
