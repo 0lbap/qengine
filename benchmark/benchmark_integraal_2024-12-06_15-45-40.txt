@@ -1,0 +1,42 @@
+=== MACHINE ===
+Operating System: GNU/Linux Ubuntu 22.04.5 LTS (Jammy Jellyfish) build 6.8.0-49-generic
+Processor: Intel(R) Core(TM) Ultra 5 135H
+Logical Cores: 18
+Physical Cores: 14
+Total Memory: 15439 MB (15 GB)
+Available Memory: 4303 MB (4 GB)
+Processor Frequency: 4600 MHz
+Disk: / Total: 455 GB Free: 295 GB
+Disk: /dev/nvme0n1p3 Total: 455 GB Free: 295 GB
+Disk: /dev/nvme0n1p1 Total: 0 GB Free: 0 GB
+Disk: jetbrains-toolbox Total: 0 GB Free: 0 GB
+Motherboard: 0P80KX (Manufacturer: Dell Inc.)
+BIOS: unknown Version: 1.8.0
+Java Version: 21.0.5
+Java Vendor: JetBrains s.r.o.
+
+=== Q1 ===
+TOTAL : 34ms
+Q_1_subscribes_1000.queryset : 20ms
+Q_1_eligibleregion_1000.queryset : 2ms
+Q_1_includes_1000.queryset : 3ms
+Q_1_likes_1000.queryset : 6ms
+Q_1_nationality_1000.queryset : 3ms
+
+=== Q2 ===
+TOTAL : 26ms
+Q_2_includes_eligibleRegion_1000.queryset : 13ms
+Q_2_subscribes_likes_1000.queryset : 1ms
+Q_2_tag_homepage_1000.queryset : 8ms
+Q_2_likes_nationality_1000.queryset : 4ms
+
+=== Q3 ===
+TOTAL : 25ms
+Q_3_nationality_gender_type_1000.queryset : 7ms
+Q_3_location_gender_type_1000.queryset : 12ms
+Q_3_location_nationality_gender_1000.queryset : 6ms
+
+=== Q4 ===
+TOTAL : 5ms
+Q_4_location_nationality_gender_type_1000.queryset : 5ms
+
