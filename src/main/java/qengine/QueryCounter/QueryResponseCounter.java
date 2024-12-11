@@ -9,7 +9,6 @@ import qengine.parser.StarQuerySparQLParser;
 import qengine.storage.RDFHexaStore;
 
 import java.io.*;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class QueryResponseCounter {
@@ -18,7 +17,7 @@ public class QueryResponseCounter {
     private static final String OUTPUT_FILE_500K = "query_counter/query_responses_500k.dat";
     private static final String OUTPUT_FILE_2M = "query_counter/query_responses_2m.dat";
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
 
         // === 500K ===
 
@@ -133,19 +132,9 @@ public class QueryResponseCounter {
                     }
                 }
             }
-//            for (File queryFile : queryFiles) {
-//                try (StarQuerySparQLParser parser = new StarQuerySparQLParser(queryFile.getAbsolutePath())) {
-//                    while (parser.hasNext()) {
-//                        StarQuery query = (StarQuery) parser.next();
-//                        long responseCount = Iterators.size(store.match(query)); // Assurez-vous que cette méthode retourne le nombre de réponses
-//                        writer.write(responseCount + "\n");
-//                    }
-//                }
-//            }
             System.out.println("Résultats écrits dans : " + outputFile.getAbsolutePath());
         } catch (IOException e) {
             System.err.println("Erreur lors de l'écriture du fichier : " + outputFilePath);
-            e.printStackTrace();
         }
     }
 
