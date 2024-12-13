@@ -11,26 +11,30 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class HexastoreBenchmark {
 
-    private static final String DATA_DIR = "data/";
-    private static final String DATA_FILE = DATA_DIR + "500K.nt";
-    private static final String QUERYSET_DIR_100 = "watdiv-mini-projet-partie-2/testsuite/queries/100";
-    private static final String QUERYSET_DIR_1000 = "watdiv-mini-projet-partie-2/testsuite/queries/1000";
-    private static final String QUERYSET_DIR_10000 = "watdiv-mini-projet-partie-2/testsuite/queries/10000";
+    private static String dataFilePath;
+    private static String querysetDirPath;
+    private static String outputFilePath;
+
+    public static void start(String dataFilePath, String querysetDirPath, String outputFilePath) throws IOException {
+        HexastoreBenchmark.dataFilePath = dataFilePath;
+        HexastoreBenchmark.querysetDirPath = querysetDirPath;
+        HexastoreBenchmark.outputFilePath = outputFilePath;
+        HexastoreBenchmark.main(new String[]{});
+    }
 
     public static void main(String[] args) throws IOException {
-        List<RDFAtom> rdfAtoms = parseRDFData(DATA_FILE);
+        List<RDFAtom> rdfAtoms = parseRDFData(dataFilePath);
 
         RDFHexaStore store = new RDFHexaStore();
         store.addAll(rdfAtoms);
 
         System.out.println("Données RDF chargées dans le store. Début du benchmark...");
 
-        Map<String, Map<String, Long>> results = executeGroupedQueries(QUERYSET_DIR_1000, store);
+        Map<String, Map<String, Long>> results = executeGroupedQueries(querysetDirPath, store);
         saveResultsToFile(results);
 
         System.out.println("Benchmarks terminés. Résultats enregistrés dans le répertoire 'benchmark'.");
@@ -122,15 +126,7 @@ public class HexastoreBenchmark {
      * @param results Map des résultats groupés par catégorie
      */
     private static void saveResultsToFile(Map<String, Map<String, Long>> results) {
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-        String outputPath = "benchmark/benchmark_hexastore_" + timestamp + ".txt";
-        File benchmarkDir = new File("benchmark");
-
-        if (!benchmarkDir.exists()) {
-            benchmarkDir.mkdirs();
-        }
-
-        try (FileWriter writer = new FileWriter(outputPath)) {
+        try (FileWriter writer = new FileWriter(outputFilePath)) {
             // Écrire les informations de la machine
             writer.write("=== MACHINE ===\n");
             writer.write(MachineInfo.getMachineInfo());
@@ -150,9 +146,9 @@ public class HexastoreBenchmark {
                 }
                 writer.write("\n");
             }
-            System.out.println("Résultats sauvegardés dans : " + outputPath);
+            System.out.println("Résultats sauvegardés dans : " + outputFilePath);
         } catch (IOException e) {
-            System.err.println("Erreur lors de l'écriture du fichier de benchmark : " + outputPath);
+            System.err.println("Erreur lors de l'écriture du fichier de benchmark : " + outputFilePath);
         }
     }
 
