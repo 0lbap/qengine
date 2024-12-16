@@ -15,29 +15,18 @@ import java.util.*;
 
 public class HexastoreBenchmark {
 
-    private static String dataFilePath;
-    private static String querysetDirPath;
-    private static String outputFilePath;
-
     public static void start(String dataFilePath, String querysetDirPath, String outputFilePath) throws IOException {
-        HexastoreBenchmark.dataFilePath = dataFilePath;
-        HexastoreBenchmark.querysetDirPath = querysetDirPath;
-        HexastoreBenchmark.outputFilePath = outputFilePath;
-        HexastoreBenchmark.main(new String[]{});
-    }
-
-    public static void main(String[] args) throws IOException {
         List<RDFAtom> rdfAtoms = parseRDFData(dataFilePath);
 
         RDFHexaStore store = new RDFHexaStore();
         store.addAll(rdfAtoms);
 
-        System.out.println("Données RDF chargées dans le store. Début du benchmark...");
+        System.out.println("Données RDF chargées dans le HexaStore. Début du benchmark...");
 
         Map<String, Long> results = executeGroupedQueries(querysetDirPath, store);
-        saveResultsToFile(results);
+        saveResultsToFile(results, outputFilePath);
 
-        System.out.println("Benchmarks terminés. Résultats enregistrés dans le répertoire 'benchmark'.");
+        System.out.println("Benchmark terminé. Résultats enregistrés dans le répertoire " + outputFilePath + ".");
     }
 
     private static List<RDFAtom> parseRDFData(String rdfFilePath) throws IOException {
@@ -80,10 +69,13 @@ public class HexastoreBenchmark {
             String category = entry.getKey();
             List<File> files = entry.getValue();
 
-            long startTime = System.currentTimeMillis();
+            List<StarQuery> queries = new ArrayList<>();
             for (File file : files) {
-                executeAllQueriesFromFile(file, store);
+                queries.addAll(loadAllQueriesFromFile(file));
             }
+
+            long startTime = System.currentTimeMillis();
+            executeAllQueries(queries, store);
             long totalTime = System.currentTimeMillis() - startTime;
 
             groupedResults.put(category, totalTime);
@@ -92,18 +84,26 @@ public class HexastoreBenchmark {
         return groupedResults;
     }
 
-    private static void executeAllQueriesFromFile(File queryFile, RDFHexaStore store) {
+    private static void executeAllQueries(List<StarQuery> queries, RDFHexaStore store) {
+        for (StarQuery query : queries) {
+            store.match(query);
+        }
+    }
+
+    private static List<StarQuery> loadAllQueriesFromFile(File queryFile) {
+        List<StarQuery> queries = new ArrayList<>();
         try (StarQuerySparQLParser parser = new StarQuerySparQLParser(queryFile.getAbsolutePath())) {
             while (parser.hasNext()) {
                 StarQuery query = (StarQuery) parser.next();
-                store.match(query);
+                queries.add(query);
             }
         } catch (IOException e) {
             System.err.println("Erreur lors du traitement du fichier : " + queryFile.getName());
         }
+        return queries;
     }
 
-    private static void saveResultsToFile(Map<String, Long> results) {
+    private static void saveResultsToFile(Map<String, Long> results, String outputFilePath) {
         try (FileWriter writer = new FileWriter(outputFilePath)) {
             writer.write("=== MACHINE ===\n");
             writer.write(MachineInfo.getMachineInfo());
@@ -118,4 +118,5 @@ public class HexastoreBenchmark {
             System.err.println("Erreur lors de l'écriture du fichier de benchmark : " + outputFilePath);
         }
     }
+
 }

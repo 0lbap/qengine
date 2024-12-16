@@ -18,21 +18,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class IntegraalBenchmark {
 
-    private static String dataFilePath;
-    private static String querysetDirPath;
-    private static String outputFilePath;
-
     public static void start(String dataFilePath, String querysetDirPath, String outputFilePath) throws IOException {
-        IntegraalBenchmark.dataFilePath = dataFilePath;
-        IntegraalBenchmark.querysetDirPath = querysetDirPath;
-        IntegraalBenchmark.outputFilePath = outputFilePath;
-        IntegraalBenchmark.main(new String[]{});
-    }
-
-    public static void main(String[] args) throws IOException {
         List<RDFAtom> rdfAtoms = parseRDFData(dataFilePath);
 
         FactBase factBase = new SimpleInMemoryGraphStore();
@@ -43,9 +33,9 @@ public class IntegraalBenchmark {
         System.out.println("Données RDF chargées dans Integraal. Début du benchmark...");
 
         Map<String, Long> results = executeGroupedQueries(querysetDirPath, factBase);
-        saveResultsToFile(results);
+        saveResultsToFile(results, outputFilePath);
 
-        System.out.println("Benchmarks terminés. Résultats enregistrés dans le répertoire 'benchmark'.");
+        System.out.println("Benchmark terminé. Résultats enregistrés dans le répertoire " + outputFilePath + ".");
     }
 
     private static List<RDFAtom> parseRDFData(String rdfFilePath) throws IOException {
@@ -88,10 +78,17 @@ public class IntegraalBenchmark {
             String category = entry.getKey();
             List<File> files = entry.getValue();
 
-            long startTime = System.currentTimeMillis();
+            List<StarQuery> queries = new ArrayList<>();
             for (File file : files) {
-                executeAllQueriesFromFile(file, factBase);
+                queries.addAll(loadAllQueriesFromFile(file));
             }
+
+            List<FOQuery<FOFormulaConjunction>> foQueries = queries.stream().map(StarQuery::asFOQuery).collect(Collectors.toList());
+
+            FOQueryEvaluator<FOFormula> evaluator = GenericFOQueryEvaluator.defaultInstance();
+
+            long startTime = System.currentTimeMillis();
+            executeAllQueries(foQueries, evaluator, factBase);
             long totalTime = System.currentTimeMillis() - startTime;
 
             groupedResults.put(category, totalTime);
@@ -100,20 +97,26 @@ public class IntegraalBenchmark {
         return groupedResults;
     }
 
-    private static void executeAllQueriesFromFile(File queryFile, FactBase factBase) {
+    private static void executeAllQueries(List<FOQuery<FOFormulaConjunction>> foQueries, FOQueryEvaluator<FOFormula> evaluator, FactBase factBase) {
+        for (FOQuery<FOFormulaConjunction> foQuery : foQueries) {
+            evaluator.evaluate(foQuery, factBase);
+        }
+    }
+
+    private static List<StarQuery> loadAllQueriesFromFile(File queryFile) {
+        List<StarQuery> queries = new ArrayList<>();
         try (StarQuerySparQLParser parser = new StarQuerySparQLParser(queryFile.getAbsolutePath())) {
-            FOQueryEvaluator<FOFormula> evaluator = GenericFOQueryEvaluator.defaultInstance();
             while (parser.hasNext()) {
                 StarQuery query = (StarQuery) parser.next();
-                FOQuery<FOFormulaConjunction> foQuery = query.asFOQuery();
-                evaluator.evaluate(foQuery, factBase);
+                queries.add(query);
             }
         } catch (IOException e) {
             System.err.println("Erreur lors du traitement du fichier : " + queryFile.getName());
         }
+        return queries;
     }
 
-    private static void saveResultsToFile(Map<String, Long> results) {
+    private static void saveResultsToFile(Map<String, Long> results, String outputFilePath) {
         try (FileWriter writer = new FileWriter(outputFilePath)) {
             writer.write("=== MACHINE ===\n");
             writer.write(MachineInfo.getMachineInfo());
@@ -128,4 +131,5 @@ public class IntegraalBenchmark {
             System.err.println("Erreur lors de l'écriture du fichier de benchmark : " + outputFilePath);
         }
     }
+
 }
