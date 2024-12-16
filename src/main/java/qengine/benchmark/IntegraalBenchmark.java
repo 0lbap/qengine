@@ -42,18 +42,12 @@ public class IntegraalBenchmark {
 
         System.out.println("Données RDF chargées dans Integraal. Début du benchmark...");
 
-        Map<String, Map<String, Long>> results = executeGroupedQueries(querysetDirPath, factBase);
+        Map<String, Long> results = executeGroupedQueries(querysetDirPath, factBase);
         saveResultsToFile(results);
 
         System.out.println("Benchmarks terminés. Résultats enregistrés dans le répertoire 'benchmark'.");
     }
 
-    /**
-     * Parse le contenu d'un fichier RDF.
-     *
-     * @param rdfFilePath Chemin vers le fichier RDF à parser
-     * @return Liste des RDFAtoms parsés
-     */
     private static List<RDFAtom> parseRDFData(String rdfFilePath) throws IOException {
         FileReader rdfFile = new FileReader(rdfFilePath);
         List<RDFAtom> rdfAtoms = new ArrayList<>();
@@ -66,16 +60,8 @@ public class IntegraalBenchmark {
         return rdfAtoms;
     }
 
-    /**
-     * Exécute les requêtes par groupe (Q1, Q2, etc.) et mesure les temps d'exécution.
-     *
-     * @param querySetDir Chemin vers le répertoire contenant les fichiers queryset
-     * @param factBase    Instance du FactBase Integraal
-     * @return Une map contenant les résultats regroupés par catégorie
-     */
-    private static Map<String, Map<String, Long>> executeGroupedQueries(String querySetDir, FactBase factBase) {
-        // Utilisation d'un TreeMap pour trier les catégories par ordre naturel (numérique)
-        Map<String, Map<String, Long>> groupedResults = new TreeMap<>();
+    private static Map<String, Long> executeGroupedQueries(String querySetDir, FactBase factBase) {
+        Map<String, Long> groupedResults = new TreeMap<>();
         File dir = new File(querySetDir);
 
         if (!dir.exists() || !dir.isDirectory()) {
@@ -89,72 +75,53 @@ public class IntegraalBenchmark {
             return groupedResults;
         }
 
+        Map<String, List<File>> groupedFiles = new TreeMap<>();
         for (File queryFile : queryFiles) {
             String fileName = queryFile.getName();
-            // Extrait correctement la catégorie (ex. "Q1", "Q2", ...)
             String[] parts = fileName.split("_");
             String category = parts[0] + parts[1];
 
-            groupedResults.putIfAbsent(category, new LinkedHashMap<>());
-            long fileExecutionTime = executeQueryFile(queryFile, factBase);
-            groupedResults.get(category).put(fileName, fileExecutionTime);
+            groupedFiles.computeIfAbsent(category, k -> new ArrayList<>()).add(queryFile);
+        }
+
+        for (Map.Entry<String, List<File>> entry : groupedFiles.entrySet()) {
+            String category = entry.getKey();
+            List<File> files = entry.getValue();
+
+            long startTime = System.currentTimeMillis();
+            for (File file : files) {
+                executeAllQueriesFromFile(file, factBase);
+            }
+            long totalTime = System.currentTimeMillis() - startTime;
+
+            groupedResults.put(category, totalTime);
         }
 
         return groupedResults;
     }
 
-    /**
-     * Exécute toutes les requêtes d'un fichier et mesure le temps total avec Integraal.
-     *
-     * @param queryFile Fichier queryset à exécuter
-     * @param factBase  Instance du FactBase Integraal
-     * @return Temps total d'exécution pour ce fichier
-     */
-    private static long executeQueryFile(File queryFile, FactBase factBase) {
-        long totalTime = 0;
-
+    private static void executeAllQueriesFromFile(File queryFile, FactBase factBase) {
         try (StarQuerySparQLParser parser = new StarQuerySparQLParser(queryFile.getAbsolutePath())) {
+            FOQueryEvaluator<FOFormula> evaluator = GenericFOQueryEvaluator.defaultInstance();
             while (parser.hasNext()) {
                 StarQuery query = (StarQuery) parser.next();
                 FOQuery<FOFormulaConjunction> foQuery = query.asFOQuery();
-
-                FOQueryEvaluator<FOFormula> evaluator = GenericFOQueryEvaluator.defaultInstance();
-                long startTime = System.currentTimeMillis();
-                evaluator.evaluate(foQuery, factBase); // Évaluation avec Integraal
-                totalTime += (System.currentTimeMillis() - startTime);
+                evaluator.evaluate(foQuery, factBase);
             }
         } catch (IOException e) {
             System.err.println("Erreur lors du traitement du fichier : " + queryFile.getName());
         }
-
-        return totalTime;
     }
 
-    /**
-     * Sauvegarde les résultats des benchmarks dans un fichier texte.
-     *
-     * @param results Map des résultats groupés par catégorie
-     */
-    private static void saveResultsToFile(Map<String, Map<String, Long>> results) {
+    private static void saveResultsToFile(Map<String, Long> results) {
         try (FileWriter writer = new FileWriter(outputFilePath)) {
-            // Écrire les informations de la machine
             writer.write("=== MACHINE ===\n");
             writer.write(MachineInfo.getMachineInfo());
             writer.write("\n");
 
-            // Écrire les résultats des benchmarks
-            for (Map.Entry<String, Map<String, Long>> entry : results.entrySet()) {
-                String category = entry.getKey();
-                Map<String, Long> fileResults = entry.getValue();
-
-                long categoryTotalTime = fileResults.values().stream().mapToLong(Long::longValue).sum();
-
-                writer.write("=== " + category + " ===\n");
-                writer.write("TOTAL : " + categoryTotalTime + "ms\n");
-                for (Map.Entry<String, Long> fileResult : fileResults.entrySet()) {
-                    writer.write(fileResult.getKey() + " : " + fileResult.getValue() + "ms\n");
-                }
-                writer.write("\n");
+            for (Map.Entry<String, Long> entry : results.entrySet()) {
+                writer.write("=== " + entry.getKey() + " ===\n");
+                writer.write("TOTAL : " + entry.getValue() + "ms\n\n");
             }
             System.out.println("Résultats sauvegardés dans : " + outputFilePath);
         } catch (IOException e) {
