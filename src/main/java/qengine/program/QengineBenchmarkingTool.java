@@ -4,6 +4,7 @@ import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import qengine.benchmark.HexastoreBenchmark;
+import qengine.benchmark.HexastoreConcurentBenchmark;
 import qengine.benchmark.IntegraalBenchmark;
 
 import java.util.List;
@@ -26,7 +27,7 @@ class QengineBenchmarkingTool implements Callable<Integer> {
 
     @Override
     public Integer call() throws Exception {
-        if (!List.of("hexastore", "integraal").contains(implementation)) {
+        if (!List.of("hexastore", "integraal", "concurrent").contains(implementation)) {
             System.out.println("Invalid implementation: " + implementation);
             return 1;
         }
@@ -38,6 +39,8 @@ class QengineBenchmarkingTool implements Callable<Integer> {
             HexastoreBenchmark.start(dataFilePath, querysetDirPath, outputFilePath);
         } else if (implementation.equals("integraal")) {
             IntegraalBenchmark.start(dataFilePath, querysetDirPath, outputFilePath);
+        } else if (implementation.equals("concurrent")) {
+            HexastoreConcurentBenchmark.start(dataFilePath, querysetDirPath, outputFilePath);
         }
         return 0;
     }
