@@ -1,5 +1,6 @@
 package qengine.benchmark;
 
+import com.github.jsonldjava.shaded.com.google.common.collect.Iterators;
 import qengine.model.StarQuery;
 import qengine.parser.RDFAtomParser;
 import qengine.parser.StarQuerySparQLParser;
@@ -14,12 +15,20 @@ import java.util.*;
 public class CleanQueryset {
 
     private final String datasetPath;
-    private final String querysetDirPath;
-    private final String outputDirPath;
+    private String querysetDirPath;
+    private String outputDirPath;
 
     public CleanQueryset(String datasetPath, String querysetDirPath, String outputDirPath) {
         this.datasetPath = datasetPath;
         this.querysetDirPath = querysetDirPath;
+        this.outputDirPath = outputDirPath;
+    }
+
+    public void setQuerysetDirPath(String querysetDirPath) {
+        this.querysetDirPath = querysetDirPath;
+    }
+
+    public void setOutputDirPath(String outputDirPath) {
         this.outputDirPath = outputDirPath;
     }
 
@@ -64,41 +73,62 @@ public class CleanQueryset {
 
     }
 
-//    public void garderCinqPourcentDesRequeteZero() throws IOException {
-//        RDFHexaStore store = loadDataset();
-//        File[] querysetFiles = new File(outputDirPath).listFiles((d, name) -> name.endsWith(".queryset"));
-//
-//        if (querysetFiles == null) {
-//            throw new FileNotFoundException("Aucun fichier queryset dédupliqué trouvé dans le répertoire : " + outputDirPath);
-//        }
-//
-//        for (File file : querysetFiles) {
-//            List<StarQuery> zeroResponseQueries = new ArrayList<>();
-//            List<StarQuery> nonZeroResponseQueries = new ArrayList<>();
-//
-//            try (StarQuerySparQLParser parser = new StarQuerySparQLParser(file.getAbsolutePath())) {
-//                while (parser.hasNext()) {
-//                    StarQuery query = (StarQuery) parser.next();
-//                    long responseCount = store.match(query).hasNext() ? 1 : 0;
-//                    if (responseCount == 0) {
-//                        zeroResponseQueries.add(query);
-//                    } else {
-//                        nonZeroResponseQueries.add(query);
-//                    }
-//                }
-//            }
-//
-//            int zeroToKeep = (int) Math.ceil(zeroResponseQueries.size() * 0.05);
-//            Collections.shuffle(zeroResponseQueries);
-//            List<StarQuery> filteredZeroQueries = zeroResponseQueries.subList(0, Math.min(zeroToKeep, zeroResponseQueries.size()));
-//
-//            List<StarQuery> finalQueries = new ArrayList<>();
-//            finalQueries.addAll(nonZeroResponseQueries);
-//            finalQueries.addAll(filteredZeroQueries);
-//
-//            writeQueriesToFile(finalQueries, file.getName());
-//        }
-//    }
+    public void garderCinqPourcentDesRequeteZero() throws IOException {
+        RDFHexaStore store = loadDataset(); // Charger les données du dataset
+        File[] querysetFiles = new File(querysetDirPath).listFiles((d, name) -> name.endsWith(".queryset"));
+
+        if (querysetFiles == null || querysetFiles.length == 0) {
+            throw new FileNotFoundException("Aucun fichier queryset trouvé dans : " + querysetDirPath);
+        }
+
+        List<StarQuery> zeroResponseQueries = new ArrayList<>();
+        Map<File, List<StarQuery>> fileToNonZeroQueries = new HashMap<>();
+
+        // Collecter toutes les requêtes zéro et non zéro
+        for (File file : querysetFiles) {
+            List<StarQuery> nonZeroResponseQueries = new ArrayList<>();
+
+            try (StarQuerySparQLParser parser = new StarQuerySparQLParser(file.getAbsolutePath())) {
+                while (parser.hasNext()) {
+                    StarQuery query = (StarQuery) parser.next();
+                    long responseCount = Iterators.size(store.match(query)); // Compter les réponses
+
+                    if (responseCount == 0) {
+                        zeroResponseQueries.add(query);
+                    } else {
+                        nonZeroResponseQueries.add(query);
+                    }
+                }
+            }
+
+            fileToNonZeroQueries.put(file, nonZeroResponseQueries);
+        }
+
+        System.out.println("Total des requêtes zéro collectées : " + zeroResponseQueries.size());
+
+        // Calculer 5% globalement
+        int zeroToKeep = (int) Math.ceil(zeroResponseQueries.size() * 0.05);
+        System.out.println("5% des requêtes zéro à conserver : " + zeroToKeep);
+
+        // Sélectionner aléatoirement 5% des requêtes zéro
+        Collections.shuffle(zeroResponseQueries);
+        List<StarQuery> selectedZeroQueries = zeroResponseQueries.subList(0, Math.min(zeroToKeep, zeroResponseQueries.size()));
+
+        // Réécrire les fichiers
+        for (File file : querysetFiles) {
+            List<StarQuery> finalQueries = new ArrayList<>(fileToNonZeroQueries.get(file));
+
+            // Ajouter les requêtes zéro sélectionnées appartenant à ce fichier
+            for (StarQuery query : selectedZeroQueries) {
+                if (fileToNonZeroQueries.get(file).contains(query)) {
+                    finalQueries.add(query);
+                }
+            }
+
+            writeQueriesToFile(finalQueries, file.getName());
+        }
+    }
+
 
     private RDFHexaStore loadDataset() throws IOException {
         RDFHexaStore store = new RDFHexaStore();
@@ -129,24 +159,35 @@ public class CleanQueryset {
         }
     }
 
+
+
     public static void main(String[] args) {
 
-        String datasetPath = "data/500K.nt";
+        String datasetPath = "data/2M.nt";
         String querysetDirPath = "watdiv-mini-projet-partie-2/testsuite/queries";
-        String outputDirPath = "watdiv-mini-projet-partie-2/testsuite/result_query";
+        String outputDirPath = "watdiv-mini-projet-partie-2/testsuite/nodoublon_query";
 
         CleanQueryset cleaner = new CleanQueryset(datasetPath, querysetDirPath, outputDirPath);
 
         try {
+            // Suppression des doublons
             System.out.println("Début du nettoyage des fichiers queryset...");
             cleaner.supprimerDoublon();
             System.out.println("Suppression des doublons terminée.");
+
+            // Garder 5% des requêtes zéro
             System.out.println("Début de la suppression des 95% des requêtes zéro...");
-//            cleaner.garderCinqPourcentDesRequeteZero();
+            cleaner.setQuerysetDirPath("watdiv-mini-projet-partie-2/testsuite/nodoublon_query");
+            cleaner.setOutputDirPath("watdiv-mini-projet-partie-2/testsuite/final_queryset");
+            cleaner.garderCinqPourcentDesRequeteZero();
+
+            // Nettoyage terminé
             System.out.println("Nettoyage terminé. Fichiers générés dans : " + outputDirPath);
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
 }
 
