@@ -185,7 +185,7 @@ public class CleanQueryset {
             System.out.println("Nettoyage terminé. Fichiers générés dans : " + outputDirPath);
 
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Une erreur est survenue lors du nettoyage.");
         }
     }
 
