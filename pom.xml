@@ -13,8 +13,8 @@
     <mockito-version>5.3.1</mockito-version>
     <sonar.organization>0lbap</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <sonar.coverage.exclusions>src/main/java/qengine/program/*,src/main/java/qengine/benchmark/*,src/main/java/qengine/QueryCounter/*,src/main/java/concurrent_qengine/*</sonar.coverage.exclusions>
-    <sonar.cpd.exclusions>src/main/java/qengine/program/*,src/main/java/qengine/benchmark/*,src/main/java/qengine/QueryCounter/*,src/main/java/concurrent_qengine/*</sonar.cpd.exclusions>
+    <sonar.coverage.exclusions>src/main/java/qengine/program/*,src/main/java/qengine/benchmark/*,src/main/java/qengine/QueryCounter/*,src/main/java/concurrent_qengine/**</sonar.coverage.exclusions>
+    <sonar.cpd.exclusions>src/main/java/qengine/program/*,src/main/java/qengine/benchmark/*,src/main/java/qengine/QueryCounter/*,src/main/java/concurrent_qengine/**</sonar.cpd.exclusions>
   </properties>
 
   <build>
