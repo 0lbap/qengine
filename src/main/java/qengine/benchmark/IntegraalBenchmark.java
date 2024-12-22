@@ -4,7 +4,6 @@ import fr.boreal.model.formula.api.FOFormula;
 import fr.boreal.model.formula.api.FOFormulaConjunction;
 import fr.boreal.model.kb.api.FactBase;
 import fr.boreal.model.query.api.FOQuery;
-import fr.boreal.model.logicalElements.api.Substitution;
 import fr.boreal.model.queryEvaluation.api.FOQueryEvaluator;
 import fr.boreal.query_evaluation.generic.GenericFOQueryEvaluator;
 import fr.boreal.storage.natives.SimpleInMemoryGraphStore;
@@ -18,19 +17,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class IntegraalBenchmark {
 
-    private static final String DATA_DIR = "data/";
-    private static final String DATA_FILE = DATA_DIR + "500K.nt";
-    private static final String QUERYSET_DIR_100 = "watdiv-mini-projet-partie-2/testsuite/queries/100";
-    private static final String QUERYSET_DIR_1000 = "watdiv-mini-projet-partie-2/testsuite/queries/1000";
-    private static final String QUERYSET_DIR_10000 = "watdiv-mini-projet-partie-2/testsuite/queries/10000";
-
-    public static void main(String[] args) throws IOException {
-        List<RDFAtom> rdfAtoms = parseRDFData(DATA_FILE);
+    public static void start(String dataFilePath, String querysetDirPath, String outputFilePath) throws IOException {
+        List<RDFAtom> rdfAtoms = parseRDFData(dataFilePath);
 
         FactBase factBase = new SimpleInMemoryGraphStore();
         for (RDFAtom atom : rdfAtoms) {
@@ -39,18 +32,12 @@ public class IntegraalBenchmark {
 
         System.out.println("Données RDF chargées dans Integraal. Début du benchmark...");
 
-        Map<String, Map<String, Long>> results = executeGroupedQueries(QUERYSET_DIR_1000, factBase);
-        saveResultsToFile(results);
+        Map<String, Long> results = executeGroupedQueries(querysetDirPath, factBase);
+        saveResultsToFile(results, outputFilePath);
 
-        System.out.println("Benchmarks terminés. Résultats enregistrés dans le répertoire 'benchmark'.");
+        System.out.println("Benchmark terminé. Résultats enregistrés dans le répertoire " + outputFilePath + ".");
     }
 
-    /**
-     * Parse le contenu d'un fichier RDF.
-     *
-     * @param rdfFilePath Chemin vers le fichier RDF à parser
-     * @return Liste des RDFAtoms parsés
-     */
     private static List<RDFAtom> parseRDFData(String rdfFilePath) throws IOException {
         FileReader rdfFile = new FileReader(rdfFilePath);
         List<RDFAtom> rdfAtoms = new ArrayList<>();
@@ -63,16 +50,8 @@ public class IntegraalBenchmark {
         return rdfAtoms;
     }
 
-    /**
-     * Exécute les requêtes par groupe (Q1, Q2, etc.) et mesure les temps d'exécution.
-     *
-     * @param querySetDir Chemin vers le répertoire contenant les fichiers queryset
-     * @param factBase    Instance du FactBase Integraal
-     * @return Une map contenant les résultats regroupés par catégorie
-     */
-    private static Map<String, Map<String, Long>> executeGroupedQueries(String querySetDir, FactBase factBase) {
-        // Utilisation d'un TreeMap pour trier les catégories par ordre naturel (numérique)
-        Map<String, Map<String, Long>> groupedResults = new TreeMap<>();
+    private static Map<String, Long> executeGroupedQueries(String querySetDir, FactBase factBase) {
+        Map<String, Long> groupedResults = new TreeMap<>();
         File dir = new File(querySetDir);
 
         if (!dir.exists() || !dir.isDirectory()) {
@@ -86,84 +65,71 @@ public class IntegraalBenchmark {
             return groupedResults;
         }
 
+        Map<String, List<File>> groupedFiles = new TreeMap<>();
         for (File queryFile : queryFiles) {
             String fileName = queryFile.getName();
-            // Extrait correctement la catégorie (ex. "Q1", "Q2", ...)
             String[] parts = fileName.split("_");
             String category = parts[0] + parts[1];
 
-            groupedResults.putIfAbsent(category, new LinkedHashMap<>());
-            long fileExecutionTime = executeQueryFile(queryFile, factBase);
-            groupedResults.get(category).put(fileName, fileExecutionTime);
+            groupedFiles.computeIfAbsent(category, k -> new ArrayList<>()).add(queryFile);
+        }
+
+        for (Map.Entry<String, List<File>> entry : groupedFiles.entrySet()) {
+            String category = entry.getKey();
+            List<File> files = entry.getValue();
+
+            List<StarQuery> queries = new ArrayList<>();
+            for (File file : files) {
+                queries.addAll(loadAllQueriesFromFile(file));
+            }
+
+            List<FOQuery<FOFormulaConjunction>> foQueries = queries.stream().map(StarQuery::asFOQuery).collect(Collectors.toList());
+
+            FOQueryEvaluator<FOFormula> evaluator = GenericFOQueryEvaluator.defaultInstance();
+
+            long startTime = System.currentTimeMillis();
+            executeAllQueries(foQueries, evaluator, factBase);
+            long totalTime = System.currentTimeMillis() - startTime;
+
+            groupedResults.put(category, totalTime);
         }
 
         return groupedResults;
     }
 
-    /**
-     * Exécute toutes les requêtes d'un fichier et mesure le temps total avec Integraal.
-     *
-     * @param queryFile Fichier queryset à exécuter
-     * @param factBase  Instance du FactBase Integraal
-     * @return Temps total d'exécution pour ce fichier
-     */
-    private static long executeQueryFile(File queryFile, FactBase factBase) {
-        long totalTime = 0;
+    private static void executeAllQueries(List<FOQuery<FOFormulaConjunction>> foQueries, FOQueryEvaluator<FOFormula> evaluator, FactBase factBase) {
+        for (FOQuery<FOFormulaConjunction> foQuery : foQueries) {
+            evaluator.evaluate(foQuery, factBase);
+        }
+    }
 
+    private static List<StarQuery> loadAllQueriesFromFile(File queryFile) {
+        List<StarQuery> queries = new ArrayList<>();
         try (StarQuerySparQLParser parser = new StarQuerySparQLParser(queryFile.getAbsolutePath())) {
             while (parser.hasNext()) {
                 StarQuery query = (StarQuery) parser.next();
-                FOQuery<FOFormulaConjunction> foQuery = query.asFOQuery();
-
-                FOQueryEvaluator<FOFormula> evaluator = GenericFOQueryEvaluator.defaultInstance();
-                long startTime = System.currentTimeMillis();
-                evaluator.evaluate(foQuery, factBase); // Évaluation avec Integraal
-                totalTime += (System.currentTimeMillis() - startTime);
+                queries.add(query);
             }
         } catch (IOException e) {
             System.err.println("Erreur lors du traitement du fichier : " + queryFile.getName());
         }
-
-        return totalTime;
+        return queries;
     }
 
-    /**
-     * Sauvegarde les résultats des benchmarks dans un fichier texte.
-     *
-     * @param results Map des résultats groupés par catégorie
-     */
-    private static void saveResultsToFile(Map<String, Map<String, Long>> results) {
-        String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-        String outputPath = "benchmark/benchmark_integraal_" + timestamp + ".txt";
-        File benchmarkDir = new File("benchmark");
-
-        if (!benchmarkDir.exists()) {
-            benchmarkDir.mkdirs();
-        }
-
-        try (FileWriter writer = new FileWriter(outputPath)) {
-            // Écrire les informations de la machine
+    private static void saveResultsToFile(Map<String, Long> results, String outputFilePath) {
+        try (FileWriter writer = new FileWriter(outputFilePath)) {
             writer.write("=== MACHINE ===\n");
             writer.write(MachineInfo.getMachineInfo());
             writer.write("\n");
 
-            // Écrire les résultats des benchmarks
-            for (Map.Entry<String, Map<String, Long>> entry : results.entrySet()) {
-                String category = entry.getKey();
-                Map<String, Long> fileResults = entry.getValue();
-
-                long categoryTotalTime = fileResults.values().stream().mapToLong(Long::longValue).sum();
-
-                writer.write("=== " + category + " ===\n");
-                writer.write("TOTAL : " + categoryTotalTime + "ms\n");
-                for (Map.Entry<String, Long> fileResult : fileResults.entrySet()) {
-                    writer.write(fileResult.getKey() + " : " + fileResult.getValue() + "ms\n");
-                }
-                writer.write("\n");
+            for (Map.Entry<String, Long> entry : results.entrySet()) {
+                writer.write("=== " + entry.getKey() + " ===\n");
+                writer.write("TOTAL : " + entry.getValue() + "ms\n\n");
             }
-            System.out.println("Résultats sauvegardés dans : " + outputPath);
+            System.out.println("Résultats sauvegardés dans : " + outputFilePath);
         } catch (IOException e) {
-            System.err.println("Erreur lors de l'écriture du fichier de benchmark : " + outputPath);
+            System.err.println("Erreur lors de l'écriture du fichier de benchmark : " + outputFilePath);
         }
     }
+
 }

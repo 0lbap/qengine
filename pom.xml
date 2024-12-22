@@ -5,6 +5,7 @@
   <groupId>fr.umfds.group3</groupId>
   <artifactId>qengine</artifactId>
   <version>0.0.1-SNAPSHOT</version>
+  <packaging>jar</packaging>
 
   <properties>
     <junit-version>4.13.2</junit-version>
@@ -12,8 +13,8 @@
     <mockito-version>5.3.1</mockito-version>
     <sonar.organization>0lbap</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-    <sonar.coverage.exclusions>src/main/java/qengine/program/*,src/main/java/qengine/benchmark/*,src/main/java/qengine/QueryCounter/*</sonar.coverage.exclusions>
-    <sonar.cpd.exclusions>src/main/java/qengine/program/*,src/main/java/qengine/benchmark/*,src/main/java/qengine/QueryCounter/*</sonar.cpd.exclusions>
+    <sonar.coverage.exclusions>src/main/java/qengine/program/*,src/main/java/qengine/benchmark/*,src/main/java/qengine/QueryCounter/*,src/main/java/concurrent_qengine/**</sonar.coverage.exclusions>
+    <sonar.cpd.exclusions>src/main/java/qengine/program/*,src/main/java/qengine/benchmark/*,src/main/java/qengine/QueryCounter/*,src/main/java/concurrent_qengine/**</sonar.cpd.exclusions>
   </properties>
 
   <build>
@@ -25,6 +26,16 @@
         <configuration>
           <source>21</source>
           <target>21</target>
+          <annotationProcessorPaths>
+            <path>
+              <groupId>info.picocli</groupId>
+              <artifactId>picocli-codegen</artifactId>
+              <version>4.7.6</version>
+            </path>
+          </annotationProcessorPaths>
+          <compilerArgs>
+            <arg>-Aproject=${project.groupId}/${project.artifactId}</arg>
+          </compilerArgs>
         </configuration>
       </plugin>
 
@@ -33,7 +44,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>qengine.program.Example</mainClass>
+              <mainClass>qengine.program.QengineBenchmarkingTool</mainClass>
             </manifest>
           </archive>
         </configuration>
@@ -45,7 +56,7 @@
         <configuration>
           <archive>
             <manifest>
-              <mainClass>qengine.program.Example</mainClass>
+              <mainClass>qengine.program.QengineBenchmarkingTool</mainClass>
             </manifest>
           </archive>
           <descriptorRefs>
@@ -242,6 +253,12 @@
       <version>${mockito-version}</version>
     </dependency>
 
+    <!-- CLI -->
+    <dependency>
+      <groupId>info.picocli</groupId>
+      <artifactId>picocli</artifactId>
+      <version>4.7.6</version>
+    </dependency>
   </dependencies>
 
 

@@ -28,3 +28,12 @@ You can run the unit tests for the project using the following command:
 ```shell
 mvn test
 ```
+
+## Benchmarking
+
+You can build and run the benchmarking tool JAR as follows:
+
+```shell
+mvn package # to create a JAR for benchmarking
+java -jar target/qengine-0.0.1-SNAPSHOT-jar-with-dependencies.jar -i hexastore -q data/queries -d data/2M.nt -o results.txt
+```

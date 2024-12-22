@@ -1,11 +1,11 @@
 package qengine.benchmark;
 
 import org.eclipse.rdf4j.rio.RDFFormat;
-import qengine.model.RDFAtom;
-import qengine.model.StarQuery;
-import qengine.parser.RDFAtomParser;
-import qengine.parser.StarQuerySparQLParser;
-import qengine.storage.RDFHexaStore;
+import concurrent_qengine.model.RDFAtom;
+import concurrent_qengine.model.StarQuery;
+import concurrent_qengine.parser.RDFAtomParser;
+import concurrent_qengine.parser.StarQuerySparQLParser;
+import concurrent_qengine.storage.RDFHexaStore;
 
 import java.io.File;
 import java.io.FileReader;
@@ -13,7 +13,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
 
-public class HexastoreBenchmark {
+public class HexastoreConcurentBenchmark {
 
     public static void start(String dataFilePath, String querysetDirPath, String outputFilePath) throws IOException {
         List<RDFAtom> rdfAtoms = parseRDFData(dataFilePath);
